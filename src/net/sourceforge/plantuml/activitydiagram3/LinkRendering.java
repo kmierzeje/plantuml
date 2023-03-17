@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -37,25 +37,25 @@ package net.sourceforge.plantuml.activitydiagram3;
 
 import java.util.Objects;
 
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.Rainbow;
+import net.sourceforge.plantuml.decoration.Rainbow;
+import net.sourceforge.plantuml.klimt.creole.Display;
 
 public class LinkRendering {
 
 	private final Rainbow rainbow;
 	private final Display display;
 
-	public LinkRendering(Rainbow rainbow) {
-		this(rainbow, Display.NULL);
+	public static LinkRendering create(Rainbow rainbow) {
+		return new LinkRendering(rainbow, Display.NULL);
+	}
+
+	public static LinkRendering none() {
+		return LinkRendering.create(Rainbow.none());
 	}
 
 	private LinkRendering(Rainbow rainbow, Display display) {
 		this.rainbow = Objects.requireNonNull(rainbow);
 		this.display = display;
-	}
-
-	public static LinkRendering none() {
-		return new LinkRendering(Rainbow.none());
 	}
 
 	public LinkRendering withRainbow(Rainbow rainbow) {

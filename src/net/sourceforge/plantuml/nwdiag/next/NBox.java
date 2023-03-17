@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -44,9 +44,9 @@ public class NBox implements Staged {
 	private final NTetris<NBar> tetris = new NTetris<>();
 
 	public void add(NBar bar) {
-		if (this.bars.contains(bar)) {
+		if (this.bars.contains(bar))
 			return;
-		}
+
 		this.bars.add(bar);
 		this.tetris.add(bar);
 	}
@@ -54,18 +54,18 @@ public class NBox implements Staged {
 	@Override
 	public NStage getStart() {
 		NStage result = bars.get(0).getStart();
-		for (int i = 1; i < bars.size(); i++) {
+		for (int i = 1; i < bars.size(); i++)
 			result = NStage.getMin(result, bars.get(i).getStart());
-		}
+
 		return result;
 	}
 
 	@Override
 	public NStage getEnd() {
 		NStage result = bars.get(0).getEnd();
-		for (int i = 1; i < bars.size(); i++) {
+		for (int i = 1; i < bars.size(); i++)
 			result = NStage.getMax(result, bars.get(i).getEnd());
-		}
+
 		return result;
 	}
 

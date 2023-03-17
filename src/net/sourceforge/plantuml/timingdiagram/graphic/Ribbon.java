@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -34,35 +34,36 @@
  */
 package net.sourceforge.plantuml.timingdiagram.graphic;
 
-import java.awt.geom.Dimension2D;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.command.Position;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.AbstractTextBlock;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.SymbolContext;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.TextBlockUtils;
-import net.sourceforge.plantuml.graphic.UDrawable;
-import net.sourceforge.plantuml.graphic.color.ColorType;
-import net.sourceforge.plantuml.graphic.color.Colors;
+import net.sourceforge.plantuml.klimt.Fashion;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.geom.XPoint2D;
+import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlockUtils;
+import net.sourceforge.plantuml.klimt.shape.UDrawable;
+import net.sourceforge.plantuml.klimt.shape.ULine;
+import net.sourceforge.plantuml.klimt.shape.URectangle;
+import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.style.PName;
+import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.timingdiagram.ChangeState;
 import net.sourceforge.plantuml.timingdiagram.TimeConstraint;
 import net.sourceforge.plantuml.timingdiagram.TimeTick;
 import net.sourceforge.plantuml.timingdiagram.TimingNote;
 import net.sourceforge.plantuml.timingdiagram.TimingRuler;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.ULine;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.utils.Position;
 
 public class Ribbon implements PDrawing {
 
@@ -77,9 +78,11 @@ public class Ribbon implements PDrawing {
 	private final boolean compact;
 	private final TextBlock title;
 	private final int suggestedHeight;
+	private final Style style;
 
 	public Ribbon(TimingRuler ruler, ISkinParam skinParam, List<TimingNote> notes, boolean compact, TextBlock title,
-			int suggestedHeight) {
+			int suggestedHeight, Style style) {
+		this.style = style;
 		this.suggestedHeight = suggestedHeight == 0 ? 24 : suggestedHeight;
 		this.compact = compact;
 		this.ruler = ruler;
@@ -92,13 +95,12 @@ public class Ribbon implements PDrawing {
 		final double x = ruler.getPosInPixel(tick);
 		final double y = getHeightForConstraints(stringBounder) + getHeightForNotes(stringBounder, Position.TOP)
 				+ getHeightForTopComment(stringBounder) + getRibbonHeight() / 2;
-		for (ChangeState change : changes) {
-			if (change.getWhen().compareTo(tick) == 0) {
-				return new IntricatedPoint(new Point2D.Double(x, y), new Point2D.Double(x, y));
-			}
-		}
-		return new IntricatedPoint(new Point2D.Double(x, y - getRibbonHeight() / 2),
-				new Point2D.Double(x, y + getRibbonHeight() / 2));
+		for (ChangeState change : changes)
+			if (change.getWhen().compareTo(tick) == 0)
+				return new IntricatedPoint(new XPoint2D(x, y), new XPoint2D(x, y));
+
+		return new IntricatedPoint(new XPoint2D(x, y - getRibbonHeight() / 2),
+				new XPoint2D(x, y + getRibbonHeight() / 2));
 	}
 
 	public void addChange(ChangeState change) {
@@ -110,7 +112,8 @@ public class Ribbon implements PDrawing {
 	}
 
 	private FontConfiguration getFontConfiguration() {
-		return new FontConfiguration(skinParam, FontParam.TIMING, null);
+		return FontConfiguration.create(skinParam, style);
+
 	}
 
 	private TextBlock createTextBlock(String value) {
@@ -128,12 +131,12 @@ public class Ribbon implements PDrawing {
 				}
 			}
 
-			public Dimension2D calculateDimension(StringBounder stringBounder) {
+			public XDimension2D calculateDimension(StringBounder stringBounder) {
 				double width = getInitialWidth(stringBounder);
-				if (compact) {
+				if (compact)
 					width += title.calculateDimension(stringBounder).getWidth() + 10;
-				}
-				return new Dimension2DDouble(width, getRibbonHeight());
+
+				return new XDimension2D(width, getRibbonHeight());
 			}
 		};
 	}
@@ -147,29 +150,29 @@ public class Ribbon implements PDrawing {
 	}
 
 	private void drawNotes(UGraphic ug, final Position position) {
-		for (TimingNote note : notes) {
+		for (TimingNote note : notes)
 			if (note.getPosition() == position) {
-				final double x = ruler.getPosInPixel(note.getWhen());
+				final TimeTick when = note.getWhen();
+				final double x = when == null ? 0 : ruler.getPosInPixel(when);
 				note.drawU(ug.apply(UTranslate.dx(x)));
 			}
-		}
 	}
 
 	private double getInitialWidth(final StringBounder stringBounder) {
-		if (initialState == null) {
+		if (initialState == null)
 			return 0;
-		}
+
 		return createTextBlock(initialState).calculateDimension(stringBounder).getWidth() + 24;
 	}
 
 	private void drawHexa(UGraphic ug, double len, ChangeState change) {
-		final HexaShape shape = HexaShape.create(len, getRibbonHeight(), change.getContext());
+		final HexaShape shape = HexaShape.create(len, getRibbonHeight(), change.getContext(skinParam, style));
 		shape.drawU(ug);
 	}
 
 	private void drawFlat(UGraphic ug, double len, ChangeState change) {
 		final ULine line = ULine.hline(len);
-		change.getContext().apply(ug).apply(UTranslate.dy(getRibbonHeight() / 2)).draw(line);
+		change.getContext(skinParam, style).apply(ug).apply(UTranslate.dy(getRibbonHeight() / 2)).draw(line);
 	}
 
 	private double getRibbonHeight() {
@@ -177,16 +180,19 @@ public class Ribbon implements PDrawing {
 	}
 
 	private void drawPentaB(UGraphic ug, double len, ChangeState change) {
-		final PentaBShape shape = PentaBShape.create(len, getRibbonHeight(), change.getContext());
+		final PentaBShape shape = PentaBShape.create(len, getRibbonHeight(), change.getContext(skinParam, style));
 		shape.drawU(ug);
 	}
 
 	private void drawPentaA(UGraphic ug, double len, ChangeState change) {
-		SymbolContext context = change.getContext();
+		Fashion context = change.getContext(skinParam, style);
 		final HColor back = initialColors.getColor(ColorType.BACK);
-		if (back != null) {
+		final HColor line = initialColors.getColor(ColorType.LINE);
+		if (back != null)
 			context = context.withBackColor(back);
-		}
+		if (line != null)
+			context = context.withForeColor(line);
+
 		final PentaAShape shape = PentaAShape.create(len, getRibbonHeight(), context);
 		shape.drawU(ug);
 	}
@@ -197,11 +203,10 @@ public class Ribbon implements PDrawing {
 
 	private double getHeightForNotes(StringBounder stringBounder, Position position) {
 		double height = 0;
-		for (TimingNote note : notes) {
-			if (note.getPosition() == position) {
+		for (TimingNote note : notes)
+			if (note.getPosition() == position)
 				height = Math.max(height, note.getHeight(stringBounder));
-			}
-		}
+
 		return height;
 	}
 
@@ -247,8 +252,13 @@ public class Ribbon implements PDrawing {
 	}
 
 	private void drawBeforeZeroState(UGraphic ug) {
-		if (initialState != null && changes.size() > 0) {
-			final StringBounder stringBounder = ug.getStringBounder();
+		if (initialState == null)
+			return;
+		final StringBounder stringBounder = ug.getStringBounder();
+		if (changes.size() == 0) {
+			drawSingle(ug.apply(UTranslate.dx(-getInitialWidth(stringBounder))),
+					getInitialWidth(stringBounder) + ruler.getWidth());
+		} else {
 			final double a = getPosInPixel(changes.get(0));
 			drawPentaA(ug.apply(UTranslate.dx(-getInitialWidth(stringBounder))), getInitialWidth(stringBounder) + a,
 					changes.get(0));
@@ -259,9 +269,26 @@ public class Ribbon implements PDrawing {
 		final StringBounder stringBounder = ug.getStringBounder();
 		if (initialState != null) {
 			final TextBlock initial = createTextBlock(initialState);
-			final Dimension2D dimInital = initial.calculateDimension(stringBounder);
+			final XDimension2D dimInital = initial.calculateDimension(stringBounder);
 			initial.drawU(ug.apply(new UTranslate(-getMarginX() - dimInital.getWidth(), -dimInital.getHeight() / 2)));
 		}
+	}
+
+	private void drawSingle(UGraphic ug, double len) {
+		final HColor back = style.value(PName.BackGroundColor).asColor(skinParam.getIHtmlColorSet());
+		final HColor line = style.value(PName.LineColor).asColor(skinParam.getIHtmlColorSet());
+		Fashion context = new Fashion(back, back).withStroke(style.getStroke());
+		ug = context.apply(ug);
+
+		final double height = getRibbonHeight();
+		final URectangle rect = URectangle.build(len, height);
+		ug.draw(rect);
+
+		final ULine border = ULine.hline(len);
+		ug = ug.apply(line);
+		ug.draw(border);
+		ug.apply(UTranslate.dy(height)).draw(border);
+
 	}
 
 	private void drawStates(UGraphic ug) {
@@ -269,20 +296,18 @@ public class Ribbon implements PDrawing {
 			final double a = getPosInPixel(changes.get(i));
 			final double b = getPosInPixel(changes.get(i + 1));
 			assert b > a;
-			if (changes.get(i).isFlat()) {
+			if (changes.get(i).isFlat())
 				drawFlat(ug.apply(UTranslate.dx(a)), b - a, changes.get(i));
-			} else if (changes.get(i).isCompletelyHidden() == false) {
+			else if (changes.get(i).isCompletelyHidden() == false)
 				drawHexa(ug.apply(UTranslate.dx(a)), b - a, changes.get(i));
-			}
 		}
 		if (changes.size() >= 1) {
 			final ChangeState last = changes.get(changes.size() - 1);
 			final double a = getPosInPixel(last);
-			if (last.isFlat()) {
+			if (last.isFlat())
 				drawFlat(ug.apply(UTranslate.dx(a)), ruler.getWidth() - a, last);
-			} else if (last.isCompletelyHidden() == false) {
+			else if (last.isCompletelyHidden() == false)
 				drawPentaB(ug.apply(UTranslate.dx(a)), ruler.getWidth() - a, last);
-			}
 		}
 	}
 
@@ -293,7 +318,7 @@ public class Ribbon implements PDrawing {
 			final double x = ruler.getPosInPixel(change.getWhen());
 			if (change.isBlank() == false && change.isCompletelyHidden() == false && change.isFlat() == false) {
 				final TextBlock state = createTextBlock(change.getState());
-				final Dimension2D dim = state.calculateDimension(stringBounder);
+				final XDimension2D dim = state.calculateDimension(stringBounder);
 				final double xtext;
 				if (i == changes.size() - 1) {
 					xtext = x + getMarginX();
@@ -304,31 +329,30 @@ public class Ribbon implements PDrawing {
 				state.drawU(ug.apply(new UTranslate(xtext, -dim.getHeight() / 2)));
 			}
 			final TextBlock commentTopBlock = getCommentTopBlock(change);
-			final Dimension2D dimComment = commentTopBlock.calculateDimension(stringBounder);
+			final XDimension2D dimComment = commentTopBlock.calculateDimension(stringBounder);
 			commentTopBlock
 					.drawU(ug.apply(new UTranslate(x + getMarginX(), -getRibbonHeight() / 2 - dimComment.getHeight())));
 		}
 	}
 
 	private TextBlock getCommentTopBlock(final ChangeState change) {
-		if (change.getComment() == null) {
+		if (change.getComment() == null)
 			return TextBlockUtils.empty(0, 0);
-		}
+
 		return createTextBlock(change.getComment());
 	}
 
 	private double getHeightForTopComment(StringBounder stringBounder) {
 		double result = 0;
-		for (ChangeState change : changes) {
+		for (ChangeState change : changes)
 			result = Math.max(result, getCommentTopBlock(change).calculateDimension(stringBounder).getHeight());
-		}
+
 		return result;
 	}
 
 	private void drawConstraints(final UGraphic ug) {
-		for (TimeConstraint constraint : constraints) {
+		for (TimeConstraint constraint : constraints)
 			constraint.drawU(ug, ruler);
-		}
 	}
 
 }

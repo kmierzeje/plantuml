@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -34,6 +34,8 @@
  */
 package net.sourceforge.plantuml.ditaa;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -43,7 +45,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sourceforge.plantuml.AbstractPSystem;
-import net.sourceforge.plantuml.BackSlash;
 import net.sourceforge.plantuml.FileFormat;
 import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.UmlDiagram;
@@ -51,38 +52,53 @@ import net.sourceforge.plantuml.api.ImageDataSimple;
 import net.sourceforge.plantuml.core.DiagramDescription;
 import net.sourceforge.plantuml.core.ImageData;
 import net.sourceforge.plantuml.core.UmlSource;
+import net.sourceforge.plantuml.log.Logme;
 import net.sourceforge.plantuml.security.SImageIO;
 import net.sourceforge.plantuml.svek.GraphvizCrash;
+import net.sourceforge.plantuml.text.BackSlash;
 
 public class PSystemDitaa extends AbstractPSystem {
+	// ::remove folder when __CORE__
 
 	// private ProcessingOptions processingOptions;
 	private Object processingOptions;
 	private final boolean dropShadows;
 	private final String data;
 	private final float scale;
+	private final boolean transparentBackground;
+	private final Font font;
+	private final boolean forceFontSize;
 	private final boolean performSeparationOfCommonEdges;
+	private final boolean allCornersAreRound;
 
-	public PSystemDitaa(UmlSource source, String data, boolean performSeparationOfCommonEdges, boolean dropShadows, float scale) {
+	public PSystemDitaa(UmlSource source, String data, boolean performSeparationOfCommonEdges, boolean dropShadows,
+			boolean allCornersAreRound, boolean transparentBackground, float scale, Font font, boolean forceFontSize) {
 		super(source);
 		this.data = data;
 		this.dropShadows = dropShadows;
 		this.performSeparationOfCommonEdges = performSeparationOfCommonEdges;
+		this.allCornersAreRound = allCornersAreRound;
 		try {
 			this.processingOptions = Class.forName("org.stathissideris.ascii2image.core.ProcessingOptions")
 					.newInstance();
 			// this.processingOptions.setPerformSeparationOfCommonEdges(performSeparationOfCommonEdges);
 			this.processingOptions.getClass().getMethod("setPerformSeparationOfCommonEdges", boolean.class)
 					.invoke(this.processingOptions, performSeparationOfCommonEdges);
+			this.processingOptions.getClass().getMethod("setAllCornersAreRound", boolean.class)
+					.invoke(this.processingOptions, allCornersAreRound);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logme.error(e);
 			this.processingOptions = null;
 		}
+		this.transparentBackground = transparentBackground;
 		this.scale = scale;
+		this.font = font;
+		this.forceFontSize = forceFontSize;
 	}
 
 	PSystemDitaa add(String line) {
-		return new PSystemDitaa(getSource(), data + line + BackSlash.NEWLINE, performSeparationOfCommonEdges, dropShadows, scale);
+		return new PSystemDitaa(getSource(), data + line + BackSlash.NEWLINE, performSeparationOfCommonEdges,
+				dropShadows, allCornersAreRound, transparentBackground, scale, font, forceFontSize);
 	}
 
 	public DiagramDescription getDescription() {
@@ -93,7 +109,7 @@ public class PSystemDitaa extends AbstractPSystem {
 	final protected ImageData exportDiagramNow(OutputStream os, int num, FileFormatOption fileFormat)
 			throws IOException {
 		if (fileFormat.getFileFormat() == FileFormat.ATXT) {
-			os.write(getSource().getPlainString().getBytes());
+			os.write(getSource().getPlainString(BackSlash.lineSeparator()).getBytes());
 			return ImageDataSimple.ok();
 		}
 
@@ -106,6 +122,18 @@ public class PSystemDitaa extends AbstractPSystem {
 			// final RenderingOptions renderingOptions = options.renderingOptions;
 			final Field f_renderingOptions = options.getClass().getField("renderingOptions");
 			final Object renderingOptions = f_renderingOptions.get(options);
+
+			// renderingOptions.setBackgroundColor(font);
+			final Method setBackgroundColor = renderingOptions.getClass().getMethod("setBackgroundColor", Color.class);
+			setBackgroundColor.invoke(renderingOptions, transparentBackground ? new Color(0, 0, 0, 0) : Color.WHITE);
+
+			// renderingOptions.setFont(font);
+			final Method setFont = renderingOptions.getClass().getMethod("setFont", Font.class);
+			setFont.invoke(renderingOptions, font);
+
+			// renderingOptions.setForceFontSize(font);
+			final Method setForceFontSize = renderingOptions.getClass().getMethod("setForceFontSize", boolean.class);
+			setForceFontSize.invoke(renderingOptions, forceFontSize);
 
 			// renderingOptions.setScale(scale);
 			final Method setScale = renderingOptions.getClass().getMethod("setScale", float.class);

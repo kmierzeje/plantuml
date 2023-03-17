@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -37,17 +37,16 @@ package net.sourceforge.plantuml.sequencediagram;
 
 import java.util.List;
 
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.SpecificBackcolorable;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.graphic.color.Colors;
+import net.sourceforge.plantuml.abel.SpecificBackcolorable;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleBuilder;
-import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.style.WithStyle;
+import net.sourceforge.plantuml.url.Url;
 
 final public class Note extends AbstractEvent implements Event, SpecificBackcolorable, WithStyle {
 
@@ -72,14 +71,14 @@ final public class Note extends AbstractEvent implements Event, SpecificBackcolo
 
 	private Style style;
 
-	public StyleSignature getDefaultStyleDefinition() {
+	public StyleSignatureBasic getStyleSignature() {
 		return noteStyle.getDefaultStyleDefinition();
 	}
 
 	public Style[] getUsedStyles() {
-		if (style != null) {
+		if (style != null)
 			return new Style[] { style.eventuallyOverride(colors) };
-		}
+
 		return new Style[] { style };
 	}
 
@@ -102,22 +101,18 @@ final public class Note extends AbstractEvent implements Event, SpecificBackcolo
 		this.styleBuilder = styleBuilder;
 		this.position = position;
 		this.strings = strings;
-		if (UseStyle.useBetaStyle()) {
-			this.style = getDefaultStyleDefinition().getMergedStyle(styleBuilder);
-		}
+		this.style = getStyleSignature().getMergedStyle(styleBuilder);
 	}
 
 	public void setStereotype(Stereotype stereotype) {
-		if (UseStyle.useBetaStyle()) {
-			final List<Style> others = stereotype.getStyles(styleBuilder);
-			this.style = getDefaultStyleDefinition().mergeWith(others).getMergedStyle(styleBuilder);
-		}
+		final List<Style> others = stereotype.getStyles(styleBuilder);
+		this.style = getStyleSignature().mergeWith(others).getMergedStyle(styleBuilder);
 	}
 
 	public Note withPosition(NotePosition newPosition) {
-		if (position == newPosition) {
+		if (position == newPosition)
 			return this;
-		}
+
 		final Note result = new Note(p, p2, newPosition, strings, styleBuilder);
 		result.noteStyle = this.noteStyle;
 		result.url = this.url;

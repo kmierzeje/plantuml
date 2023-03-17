@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,18 +35,18 @@
  */
 package net.sourceforge.plantuml.svek;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.ULine;
-import net.sourceforge.plantuml.ugraphic.URectangle;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.ULine;
+import net.sourceforge.plantuml.klimt.shape.URectangle;
 
 public final class RoundedContainer {
 
-	private final Dimension2D dim;
+	private final XDimension2D dim;
 	private final double titleHeight;
 	private final double attributeHeight;
 	private final HColor borderColor;
@@ -56,11 +56,11 @@ public final class RoundedContainer {
 	private final double rounded;
 	private final double shadowing;
 
-	public RoundedContainer(Dimension2D dim, double titleHeight, double attributeHeight, HColor borderColor,
+	public RoundedContainer(XDimension2D dim, double titleHeight, double attributeHeight, HColor borderColor,
 			HColor backColor, HColor imgBackcolor, UStroke stroke, double rounded, double shadowing) {
-		if (dim.getWidth() == 0) {
+		if (dim.getWidth() == 0)
 			throw new IllegalArgumentException();
-		}
+
 		this.rounded = rounded;
 		this.dim = dim;
 		this.imgBackcolor = imgBackcolor;
@@ -73,28 +73,28 @@ public final class RoundedContainer {
 	}
 
 	public void drawU(UGraphic ug) {
-		ug = ug.apply(backColor.bg()).apply(borderColor);
-		final URectangle rect = new URectangle(dim.getWidth(), dim.getHeight()).rounded(rounded);
-		rect.setDeltaShadow(shadowing);
-		ug.apply(stroke).draw(rect);
+		ug = ug.apply(backColor.bg()).apply(borderColor).apply(stroke);
+		final URectangle rect = URectangle.build(dim.getWidth(), dim.getHeight()).rounded(rounded);
 
-		final double yLine = titleHeight + attributeHeight;
+		if (shadowing > 0) {
+			rect.setDeltaShadow(shadowing);
+			ug.apply(HColors.transparent().bg()).draw(rect);
+			rect.setDeltaShadow(0);
 
-		ug = ug.apply(imgBackcolor.bg());
-
-		final double thickness = stroke.getThickness();
-
-		final URectangle inner = new URectangle(dim.getWidth() - 4 * thickness,
-				dim.getHeight() - titleHeight - 4 * thickness - attributeHeight).rounded(rounded);
-		ug.apply(imgBackcolor).apply(new UTranslate(2 * thickness, yLine + 2 * thickness)).draw(inner);
-
-		if (titleHeight > 0) {
-			ug.apply(stroke).apply(UTranslate.dy(yLine)).draw(ULine.hline(dim.getWidth()));
 		}
+		final double headerHeight = titleHeight + attributeHeight;
 
-		if (attributeHeight > 0) {
-			ug.apply(stroke).apply(UTranslate.dy(yLine - attributeHeight)).draw(ULine.hline(dim.getWidth()));
-		}
+		new RoundedNorth(dim.getWidth(), headerHeight, backColor, rounded).drawU(ug);
+		new RoundedSouth(dim.getWidth(), dim.getHeight() - headerHeight, imgBackcolor, rounded)
+				.drawU(ug.apply(UTranslate.dy(headerHeight)));
+
+		ug.apply(HColors.transparent().bg()).draw(rect);
+
+		if (headerHeight > 0)
+			ug.apply(UTranslate.dy(headerHeight)).draw(ULine.hline(dim.getWidth()));
+
+		if (attributeHeight > 0)
+			ug.apply(UTranslate.dy(titleHeight)).draw(ULine.hline(dim.getWidth()));
 
 	}
 }

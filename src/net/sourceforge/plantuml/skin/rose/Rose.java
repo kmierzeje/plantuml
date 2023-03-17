@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,43 +35,32 @@
  */
 package net.sourceforge.plantuml.skin.rose;
 
-import net.sourceforge.plantuml.AlignmentParam;
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.CornerParam;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.LineParam;
-import net.sourceforge.plantuml.PaddingParam;
-import net.sourceforge.plantuml.SkinParamUtils;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.SkinParameter;
-import net.sourceforge.plantuml.graphic.SymbolContext;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
 import net.sourceforge.plantuml.sequencediagram.NotePosition;
+import net.sourceforge.plantuml.skin.AlignmentParam;
 import net.sourceforge.plantuml.skin.ArrowComponent;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 import net.sourceforge.plantuml.skin.ArrowDirection;
+import net.sourceforge.plantuml.skin.ColorParam;
 import net.sourceforge.plantuml.skin.Component;
 import net.sourceforge.plantuml.skin.ComponentType;
+import net.sourceforge.plantuml.skin.LineParam;
+import net.sourceforge.plantuml.skin.PaddingParam;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.style.StyleSignature;
-import net.sourceforge.plantuml.ugraphic.UFont;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 
 public class Rose {
 
 	final private double paddingX = 5;
 	final public static double paddingY = 5;
-
-	public HColor getFontColor(ISkinParam skin, FontParam fontParam) {
-		return skin.getFontHtmlColor(null, fontParam);
-	}
 
 	public HColor getHtmlColor(ISkinParam skin, ColorParam color) {
 		return getHtmlColor(skin, null, color);
@@ -80,21 +69,11 @@ public class Rose {
 	public HColor getHtmlColor(ISkinParam skin, Stereotype stereotype, ColorParam... colorParams) {
 		for (ColorParam param : colorParams) {
 			final HColor result = skin.getHtmlColor(param, stereotype, false);
-			if (result != null) {
+			if (result != null)
 				return result;
-			}
+
 		}
 		return colorParams[0].getDefaultValue();
-	}
-
-	private FontConfiguration getUFont2(ISkinParam skinParam, FontParam fontParam) {
-		return new FontConfiguration(skinParam, fontParam, null);
-	}
-
-	public Component createComponentNote(Style[] styles, ComponentType type, ISkinParam param,
-			Display stringsToDisplay) {
-		checkRose();
-		return createComponentNote(styles, type, param, stringsToDisplay, null);
 	}
 
 	private void checkRose() {
@@ -105,7 +84,13 @@ public class Rose {
 	}
 
 	public Component createComponentNote(Style[] styles, ComponentType type, ISkinParam param, Display stringsToDisplay,
-			NotePosition notePosition) {
+			Colors colors) {
+		checkRose();
+		return createComponentNote(styles, type, param, stringsToDisplay, colors, null);
+	}
+
+	public Component createComponentNote(Style[] styles, ComponentType type, ISkinParam param, Display stringsToDisplay,
+			Colors colors, NotePosition notePosition) {
 		checkRose();
 		final HorizontalAlignment textAlign;
 		final HorizontalAlignment position;
@@ -123,236 +108,161 @@ public class Rose {
 			position = textAlign;
 		}
 
-		final Stereotype stereotype = stringsToDisplay == null ? null : stringsToDisplay.getStereotypeIfAny();
-		final double roundCorner = param.getRoundCorner(CornerParam.DEFAULT, null);
+		if (type == ComponentType.NOTE)
+			return new ComponentRoseNote(styles[0], stringsToDisplay, paddingX, paddingY, param, textAlign, position,
+					colors);
 
-		if (type == ComponentType.NOTE) {
-			return new ComponentRoseNote(styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.noteBorder), getUFont2(param, FontParam.NOTE),
-					stringsToDisplay, paddingX, paddingY, param, roundCorner, textAlign, position);
-		}
-		if (type == ComponentType.NOTE_HEXAGONAL) {
-			return new ComponentRoseNoteHexagonal(styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.noteBorder), getUFont2(param, FontParam.NOTE),
-					stringsToDisplay, param, textAlign);
-		}
-		if (type == ComponentType.NOTE_BOX) {
-			return new ComponentRoseNoteBox(styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.noteBorder), getUFont2(param, FontParam.NOTE),
-					stringsToDisplay, param, roundCorner, textAlign);
-		}
+		if (type == ComponentType.NOTE_HEXAGONAL)
+			return new ComponentRoseNoteHexagonal(styles[0], stringsToDisplay, param, colors);
+
+		if (type == ComponentType.NOTE_BOX)
+			return new ComponentRoseNoteBox(styles[0], stringsToDisplay, param, colors);
+
 		throw new UnsupportedOperationException(type.toString());
 	}
 
 	public Component createComponent(Style[] styles, ComponentType type, ArrowConfiguration config, ISkinParam param,
 			Display stringsToDisplay) {
 		checkRose();
-		final UFont fontGrouping = param.getFont(null, false, FontParam.SEQUENCE_GROUP);
+
+		if (type == ComponentType.DELAY_LINE || type == ComponentType.GROUPING_SPACE || type == ComponentType.DESTROY) {
+
+		} else {
+			if (styles == null)
+				throw new UnsupportedOperationException(type.toString());
+		}
 
 		final Stereotype stereotype = stringsToDisplay == null ? null : stringsToDisplay.getStereotypeIfAny();
 
-		final UFont newFontForStereotype = param.getFont(null, false, FontParam.SEQUENCE_STEREOTYPE);
-
-		if (type.isArrow()) {
+		if (type.isArrow())
 			return createComponentArrow(null, config, param, stringsToDisplay);
-		}
+
 		final double padding = param.getPadding(PaddingParam.PARTICIPANT);
-		final double roundCorner = param.getRoundCorner(CornerParam.DEFAULT, null);
-		final double diagonalCorner = param.getDiagonalCorner(CornerParam.DEFAULT, null);
-		if (type == ComponentType.PARTICIPANT_HEAD) {
-			return new ComponentRoseParticipant(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.participantBorder),
-					getUFont2(param, FontParam.PARTICIPANT), stringsToDisplay, param, roundCorner, diagonalCorner,
-					newFontForStereotype, getFontColor(param, FontParam.SEQUENCE_STEREOTYPE), param.minClassWidth(),
-					false, padding);
-		}
-		if (type == ComponentType.PARTICIPANT_TAIL) {
-			return new ComponentRoseParticipant(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.participantBorder),
-					getUFont2(param, FontParam.PARTICIPANT), stringsToDisplay, param, roundCorner, diagonalCorner,
-					newFontForStereotype, getFontColor(param, FontParam.SEQUENCE_STEREOTYPE), param.minClassWidth(),
-					false, padding);
-		}
-		if (type == ComponentType.COLLECTIONS_HEAD) {
-			return new ComponentRoseParticipant(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.collectionsBorder),
-					getUFont2(param, FontParam.PARTICIPANT), stringsToDisplay, param, roundCorner, diagonalCorner,
-					newFontForStereotype, getFontColor(param, FontParam.SEQUENCE_STEREOTYPE), param.minClassWidth(),
-					true, padding);
-		}
-		if (type == ComponentType.COLLECTIONS_TAIL) {
-			return new ComponentRoseParticipant(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.collectionsBorder),
-					getUFont2(param, FontParam.PARTICIPANT), stringsToDisplay, param, roundCorner, diagonalCorner,
-					newFontForStereotype, getFontColor(param, FontParam.SEQUENCE_STEREOTYPE), param.minClassWidth(),
-					true, padding);
-		}
-		if (type == ComponentType.PARTICIPANT_LINE) {
-			final HColor borderColor = getHtmlColor(param, stereotype, ColorParam.sequenceLifeLineBorder);
-			return new ComponentRoseLine(param.getThemeStyle(), styles == null ? null : styles[0], borderColor, false,
-					getStroke(param, LineParam.sequenceLifeLineBorder, 1), param.getIHtmlColorSet());
-		}
-		if (type == ComponentType.CONTINUE_LINE) {
-			final HColor borderColor = getHtmlColor(param, stereotype, ColorParam.sequenceLifeLineBorder);
-			return new ComponentRoseLine(param.getThemeStyle(), styles == null ? null : styles[0], borderColor, true,
-					getStroke(param, LineParam.sequenceLifeLineBorder, 1.5), param.getIHtmlColorSet());
-		}
-		if (type == ComponentType.ACTOR_HEAD) {
-			return new ComponentRoseActor(param.actorStyle(), styles == null ? null : styles[0],
-					styles == null ? null : styles[1], getSymbolContext(stereotype, param, ColorParam.actorBorder),
-					getUFont2(param, FontParam.ACTOR), stringsToDisplay, true, param, newFontForStereotype,
-					getFontColor(param, FontParam.SEQUENCE_STEREOTYPE));
-		}
-		if (type == ComponentType.ACTOR_TAIL) {
-			return new ComponentRoseActor(param.actorStyle(), styles == null ? null : styles[0],
-					styles == null ? null : styles[1], getSymbolContext(stereotype, param, ColorParam.actorBorder),
-					getUFont2(param, FontParam.ACTOR), stringsToDisplay, false, param, newFontForStereotype,
-					getFontColor(param, FontParam.SEQUENCE_STEREOTYPE));
-		}
-		if (type == ComponentType.BOUNDARY_HEAD) {
-			return new ComponentRoseBoundary(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.boundaryBorder),
-					getUFont2(param, FontParam.BOUNDARY), stringsToDisplay, true, param, newFontForStereotype,
-					getFontColor(param, FontParam.BOUNDARY_STEREOTYPE));
-		}
-		if (type == ComponentType.BOUNDARY_TAIL) {
-			return new ComponentRoseBoundary(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.boundaryBorder),
-					getUFont2(param, FontParam.BOUNDARY), stringsToDisplay, false, param, newFontForStereotype,
-					getFontColor(param, FontParam.BOUNDARY_STEREOTYPE));
-		}
-		if (type == ComponentType.CONTROL_HEAD) {
-			return new ComponentRoseControl(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.controlBorder), getUFont2(param, FontParam.CONTROL),
-					stringsToDisplay, true, param, newFontForStereotype,
-					getFontColor(param, FontParam.CONTROL_STEREOTYPE));
-		}
-		if (type == ComponentType.CONTROL_TAIL) {
-			return new ComponentRoseControl(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.controlBorder), getUFont2(param, FontParam.CONTROL),
-					stringsToDisplay, false, param, newFontForStereotype,
-					getFontColor(param, FontParam.CONTROL_STEREOTYPE));
-		}
-		if (type == ComponentType.ENTITY_HEAD) {
-			return new ComponentRoseEntity(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.entityBorder), getUFont2(param, FontParam.ENTITY),
-					stringsToDisplay, true, param, newFontForStereotype,
-					getFontColor(param, FontParam.ENTITY_STEREOTYPE));
-		}
-		if (type == ComponentType.ENTITY_TAIL) {
-			return new ComponentRoseEntity(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.entityBorder), getUFont2(param, FontParam.ENTITY),
-					stringsToDisplay, false, param, newFontForStereotype,
-					getFontColor(param, FontParam.ENTITY_STEREOTYPE));
-		}
-		if (type == ComponentType.QUEUE_HEAD) {
-			return new ComponentRoseQueue(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.queueBorder), getUFont2(param, FontParam.QUEUE),
-					stringsToDisplay, true, param, newFontForStereotype,
-					getFontColor(param, FontParam.QUEUE_STEREOTYPE));
-		}
-		if (type == ComponentType.QUEUE_TAIL) {
-			return new ComponentRoseQueue(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.queueBorder), getUFont2(param, FontParam.QUEUE),
-					stringsToDisplay, false, param, newFontForStereotype,
-					getFontColor(param, FontParam.QUEUE_STEREOTYPE));
-		}
-		if (type == ComponentType.DATABASE_HEAD) {
-			return new ComponentRoseDatabase(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.databaseBorder),
-					getUFont2(param, FontParam.DATABASE), stringsToDisplay, true, param, newFontForStereotype,
-					getFontColor(param, FontParam.DATABASE_STEREOTYPE));
-		}
-		if (type == ComponentType.DATABASE_TAIL) {
-			return new ComponentRoseDatabase(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getSymbolContext(stereotype, param, ColorParam.databaseBorder),
-					getUFont2(param, FontParam.DATABASE), stringsToDisplay, false, param, newFontForStereotype,
-					getFontColor(param, FontParam.DATABASE_STEREOTYPE));
-		}
-		if (type == ComponentType.NOTE) {
+
+		if (type == ComponentType.PARTICIPANT_HEAD)
+			return new ComponentRoseParticipant(styles[0], styles[1], stringsToDisplay, param,
+					getMinClassWidth(styles[0]), false, padding);
+
+		if (type == ComponentType.PARTICIPANT_TAIL)
+			return new ComponentRoseParticipant(styles[0], styles[1], stringsToDisplay, param,
+					getMinClassWidth(styles[0]), false, padding);
+
+		if (type == ComponentType.COLLECTIONS_HEAD)
+			return new ComponentRoseParticipant(styles[0], styles[1], stringsToDisplay, param,
+					getMinClassWidth(styles[0]), true, padding);
+
+		if (type == ComponentType.COLLECTIONS_TAIL)
+			return new ComponentRoseParticipant(styles[0], styles[1], stringsToDisplay, param,
+					getMinClassWidth(styles[0]), true, padding);
+
+		if (type == ComponentType.PARTICIPANT_LINE)
+			return new ComponentRoseLine(styles[0], false, param.getIHtmlColorSet());
+
+		if (type == ComponentType.CONTINUE_LINE)
+			return new ComponentRoseLine(styles[0], true, param.getIHtmlColorSet());
+
+		if (type == ComponentType.ACTOR_HEAD)
+			return new ComponentRoseActor(param.actorStyle(), styles[0], styles == null ? null : styles[1],
+					stringsToDisplay, true, param);
+
+		if (type == ComponentType.ACTOR_TAIL)
+			return new ComponentRoseActor(param.actorStyle(), styles[0], styles == null ? null : styles[1],
+					stringsToDisplay, false, param);
+
+		if (type == ComponentType.BOUNDARY_HEAD)
+			return new ComponentRoseBoundary(styles[0], styles[1], stringsToDisplay, true, param);
+
+		if (type == ComponentType.BOUNDARY_TAIL)
+			return new ComponentRoseBoundary(styles[0], styles[1], stringsToDisplay, false, param);
+
+		if (type == ComponentType.CONTROL_HEAD)
+			return new ComponentRoseControl(styles[0], styles[1], stringsToDisplay, true, param);
+
+		if (type == ComponentType.CONTROL_TAIL)
+			return new ComponentRoseControl(styles[0], styles[1], stringsToDisplay, false, param);
+
+		if (type == ComponentType.ENTITY_HEAD)
+			return new ComponentRoseEntity(styles[0], styles[1], stringsToDisplay, true, param);
+
+		if (type == ComponentType.ENTITY_TAIL)
+			return new ComponentRoseEntity(styles[0], styles[1], stringsToDisplay, false, param);
+
+		if (type == ComponentType.QUEUE_HEAD)
+			return new ComponentRoseQueue(styles[0], styles[1], stringsToDisplay, true, param);
+
+		if (type == ComponentType.QUEUE_TAIL)
+			return new ComponentRoseQueue(styles[0], styles[1], stringsToDisplay, false, param);
+
+		if (type == ComponentType.DATABASE_HEAD)
+			return new ComponentRoseDatabase(styles[0], styles[1], stringsToDisplay, true, param);
+
+		if (type == ComponentType.DATABASE_TAIL)
+			return new ComponentRoseDatabase(styles[0], styles[1], stringsToDisplay, false, param);
+
+		if (type == ComponentType.NOTE)
 			throw new UnsupportedOperationException();
-		}
-		if (type == ComponentType.NOTE_HEXAGONAL) {
+
+		if (type == ComponentType.NOTE_HEXAGONAL)
 			throw new UnsupportedOperationException();
-		}
-		if (type == ComponentType.NOTE_BOX) {
+
+		if (type == ComponentType.NOTE_BOX)
 			throw new UnsupportedOperationException();
-		}
-		final FontConfiguration bigFont = getUFont2(param, FontParam.SEQUENCE_GROUP_HEADER);
-		if (type == ComponentType.GROUPING_HEADER) {
-			FontConfiguration smallFont = bigFont.forceFont(fontGrouping, null);
-			final HColor smallColor = SkinParamUtils.getFontColor(param, FontParam.SEQUENCE_GROUP, null);
-			if (smallColor != null) {
-				smallFont = smallFont.changeColor(smallColor);
-			}
-			return new ComponentRoseGroupingHeader(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					param.getBackgroundColor(), getSymbolContext(stereotype, param, ColorParam.sequenceGroupBorder),
-					bigFont, smallFont, stringsToDisplay, param, roundCorner);
-		}
-		if (type == ComponentType.GROUPING_ELSE) {
-			return new ComponentRoseGroupingElse(styles == null ? null : styles[0],
-					getHtmlColor(param, stereotype, ColorParam.sequenceGroupBorder),
-					getUFont2(param, FontParam.SEQUENCE_GROUP), stringsToDisplay.get(0), param,
-					param.getBackgroundColor(), roundCorner);
-		}
-		if (type == ComponentType.GROUPING_SPACE) {
+
+		if (type == ComponentType.GROUPING_HEADER_LEGACY)
+			return new ComponentRoseGroupingHeader(false, styles[0], styles[1], stringsToDisplay, param);
+
+		if (type == ComponentType.GROUPING_HEADER_TEOZ)
+			return new ComponentRoseGroupingHeader(true, styles[0], styles[1], stringsToDisplay, param);
+
+		if (type == ComponentType.GROUPING_ELSE_LEGACY)
+			return new ComponentRoseGroupingElse(false, styles[0], stringsToDisplay.get(0), param);
+
+		if (type == ComponentType.GROUPING_ELSE_TEOZ)
+			return new ComponentRoseGroupingElse(true, styles[0], stringsToDisplay.get(0), param);
+
+		if (type == ComponentType.GROUPING_SPACE)
 			return new ComponentRoseGroupingSpace(7);
-		}
-		if (type == ComponentType.ALIVE_BOX_CLOSE_CLOSE) {
-			return new ComponentRoseActiveLine(param.getThemeStyle(), styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.sequenceLifeLineBorder), true, true,
-					param.getIHtmlColorSet());
-		}
-		if (type == ComponentType.ALIVE_BOX_CLOSE_OPEN) {
-			return new ComponentRoseActiveLine(param.getThemeStyle(), styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.sequenceLifeLineBorder), true, false,
-					param.getIHtmlColorSet());
-		}
+
+		if (type == ComponentType.ALIVE_BOX_CLOSE_CLOSE)
+			return new ComponentRoseActiveLine(styles[0], true, true, param.getIHtmlColorSet());
+
+		if (type == ComponentType.ALIVE_BOX_CLOSE_OPEN)
+			return new ComponentRoseActiveLine(styles[0], true, false, param.getIHtmlColorSet());
+
 		if (type == ComponentType.ALIVE_BOX_OPEN_CLOSE) {
-			return new ComponentRoseActiveLine(param.getThemeStyle(), styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.sequenceLifeLineBorder), false, true,
-					param.getIHtmlColorSet());
+			return new ComponentRoseActiveLine(styles[0], false, true, param.getIHtmlColorSet());
 		}
-		if (type == ComponentType.ALIVE_BOX_OPEN_OPEN) {
-			return new ComponentRoseActiveLine(param.getThemeStyle(), styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.sequenceLifeLineBorder), false, false,
-					param.getIHtmlColorSet());
-		}
-		if (type == ComponentType.DELAY_LINE) {
+		if (type == ComponentType.ALIVE_BOX_OPEN_OPEN)
+			return new ComponentRoseActiveLine(styles[0], false, false, param.getIHtmlColorSet());
+
+		if (type == ComponentType.DELAY_LINE)
 			return new ComponentRoseDelayLine(null, getHtmlColor(param, stereotype, ColorParam.sequenceLifeLineBorder));
-		}
-		if (type == ComponentType.DELAY_TEXT) {
-			return new ComponentRoseDelayText(styles == null ? null : styles[0],
-					getUFont2(param, FontParam.SEQUENCE_DELAY), stringsToDisplay, param);
-		}
-		if (type == ComponentType.DESTROY) {
-			return new ComponentRoseDestroy(null, getHtmlColor(param, stereotype, ColorParam.sequenceLifeLineBorder));
-		}
-		if (type == ComponentType.NEWPAGE) {
+
+		if (type == ComponentType.DELAY_TEXT)
+			return new ComponentRoseDelayText(styles[0], stringsToDisplay, param);
+
+		if (type == ComponentType.DESTROY)
+			return new ComponentRoseDestroy(styles == null ? null : styles[0],
+					getHtmlColor(param, stereotype, ColorParam.sequenceLifeLineBorder), param);
+
+		if (type == ComponentType.NEWPAGE)
 			throw new UnsupportedOperationException();
-		}
-		if (type == ComponentType.DIVIDER) {
-			return new ComponentRoseDivider(styles == null ? null : styles[0],
-					getUFont2(param, FontParam.SEQUENCE_DIVIDER),
-					getHtmlColor(param, stereotype, ColorParam.sequenceDividerBackground), stringsToDisplay, param,
-					deltaShadow(param, ColorParam.sequenceDividerBackground) > 0,
-					getStroke(param, LineParam.sequenceDividerBorder, 2),
-					getHtmlColor(param, stereotype, ColorParam.sequenceDividerBorder));
-		}
-		if (type == ComponentType.REFERENCE) {
-			return new ComponentRoseReference(styles == null ? null : styles[0], styles == null ? null : styles[1],
-					getUFont2(param, FontParam.SEQUENCE_REFERENCE),
-					getSymbolContext(stereotype, param, ColorParam.sequenceReferenceBorder), bigFont, stringsToDisplay,
-					param.getHorizontalAlignment(AlignmentParam.sequenceReferenceAlignment, null, false, null), param,
+
+		if (type == ComponentType.DIVIDER)
+			return new ComponentRoseDivider(styles[0], stringsToDisplay, param);
+
+		if (type == ComponentType.REFERENCE)
+			return new ComponentRoseReference(styles[0], styles[1], stringsToDisplay, param,
 					getHtmlColor(param, stereotype, ColorParam.sequenceReferenceBackground));
-		}
-		if (type == ComponentType.ENGLOBER) {
-			return new ComponentRoseEnglober(styles == null ? null : styles[0],
-					getSymbolContext(stereotype, param, ColorParam.sequenceBoxBorder), stringsToDisplay,
-					getUFont2(param, FontParam.SEQUENCE_BOX), param, roundCorner);
-		}
+
+		if (type == ComponentType.ENGLOBER)
+			return new ComponentRoseEnglober(styles[0], stringsToDisplay, param);
 
 		throw new UnsupportedOperationException();
+	}
+
+	private double getMinClassWidth(Style style) {
+		return style.value(PName.MinimumWidth).asDouble();
 	}
 
 	public Component createComponentNewPage(ISkinParam param) {
@@ -363,172 +273,61 @@ public class Rose {
 	public ArrowComponent createComponentArrow(Style[] styles, ArrowConfiguration config, ISkinParam param,
 			Display stringsToDisplay) {
 		checkRose();
-		final HColor sequenceArrow = config.getColor() == null ? getHtmlColor(param, ColorParam.arrow)
-				: config.getColor();
-		if (config.getArrowDirection() == ArrowDirection.SELF) {
-			return new ComponentRoseSelfArrow(styles == null ? null : styles[0], sequenceArrow,
-					getUFont2(param, FontParam.ARROW), stringsToDisplay, config, param, param.maxMessageSize(),
+
+		if (config.getArrowDirection() == ArrowDirection.SELF)
+			return new ComponentRoseSelfArrow(styles[0], stringsToDisplay, config, param, param.maxMessageSize(),
 					param.strictUmlStyle() == false);
-		}
-		HorizontalAlignment messageHorizontalAlignment;
-		final HorizontalAlignment textHorizontalAlignment;
+
 		final ArrowDirection arrowDirection = config.getArrowDirection();
-		if (UseStyle.useBetaStyle()) {
-			final StyleSignature signature = StyleSignature.of(SName.root, SName.element, SName.sequenceDiagram,
-					SName.arrow);
-			final Style textStyle = signature.getMergedStyle(param.getCurrentStyleBuilder());
-			final String value = textStyle.value(PName.HorizontalAlignment).asString();
-			messageHorizontalAlignment = textStyle.getHorizontalAlignment();
-			textHorizontalAlignment = textStyle.getHorizontalAlignment();
-			if ("first".equalsIgnoreCase(value)) {
-				final boolean isReverseDefine = config.isReverseDefine();
-				if (arrowDirection == ArrowDirection.RIGHT_TO_LEFT_REVERSE) {
-					if (isReverseDefine) {
-						messageHorizontalAlignment = HorizontalAlignment.LEFT;
-					} else {
-						messageHorizontalAlignment = HorizontalAlignment.RIGHT;
-					}
-				} else {
-					if (isReverseDefine) {
-						messageHorizontalAlignment = HorizontalAlignment.RIGHT;
-					} else {
-						messageHorizontalAlignment = HorizontalAlignment.LEFT;
-					}
-				}
-			} else if ("direction".equalsIgnoreCase(value)) {
-				if (arrowDirection == ArrowDirection.LEFT_TO_RIGHT_NORMAL) {
+
+		final StyleSignatureBasic signature = StyleSignatureBasic.of(SName.root, SName.element, SName.sequenceDiagram,
+				SName.arrow);
+		final Style textStyle = signature.getMergedStyle(param.getCurrentStyleBuilder());
+		final String value = textStyle.value(PName.HorizontalAlignment).asString();
+		HorizontalAlignment messageHorizontalAlignment = textStyle.getHorizontalAlignment();
+
+		if ("first".equalsIgnoreCase(value)) {
+			final boolean isReverseDefine = config.isReverseDefine();
+			if (arrowDirection == ArrowDirection.RIGHT_TO_LEFT_REVERSE) {
+				if (isReverseDefine)
 					messageHorizontalAlignment = HorizontalAlignment.LEFT;
-				} else if (arrowDirection == ArrowDirection.RIGHT_TO_LEFT_REVERSE) {
+				else
 					messageHorizontalAlignment = HorizontalAlignment.RIGHT;
-				} else if (arrowDirection == ArrowDirection.BOTH_DIRECTION) {
-					messageHorizontalAlignment = HorizontalAlignment.CENTER;
-				}
-			} else if ("reversedirection".equalsIgnoreCase(value)) {
-				if (arrowDirection == ArrowDirection.LEFT_TO_RIGHT_NORMAL) {
+
+			} else {
+				if (isReverseDefine)
 					messageHorizontalAlignment = HorizontalAlignment.RIGHT;
-				} else if (arrowDirection == ArrowDirection.RIGHT_TO_LEFT_REVERSE) {
+				else
 					messageHorizontalAlignment = HorizontalAlignment.LEFT;
-				} else if (arrowDirection == ArrowDirection.BOTH_DIRECTION) {
-					messageHorizontalAlignment = HorizontalAlignment.CENTER;
-				}
+
 			}
-		} else {
-			messageHorizontalAlignment = param.getHorizontalAlignment(AlignmentParam.sequenceMessageAlignment,
-					arrowDirection, config.isReverseDefine(), null);
-			textHorizontalAlignment = param.getHorizontalAlignment(AlignmentParam.sequenceMessageTextAlignment,
-					config.getArrowDirection(), false, null);
-		}
-		return new ComponentRoseArrow(styles == null ? null : styles[0], sequenceArrow,
-				getUFont2(param, FontParam.ARROW), stringsToDisplay, config, messageHorizontalAlignment, param,
-				textHorizontalAlignment, param.maxMessageSize(), param.strictUmlStyle() == false,
-				param.responseMessageBelowArrow());
-	}
+		} else if ("direction".equalsIgnoreCase(value)) {
+			if (arrowDirection == ArrowDirection.LEFT_TO_RIGHT_NORMAL)
+				messageHorizontalAlignment = HorizontalAlignment.LEFT;
+			else if (arrowDirection == ArrowDirection.RIGHT_TO_LEFT_REVERSE)
+				messageHorizontalAlignment = HorizontalAlignment.RIGHT;
+			else if (arrowDirection == ArrowDirection.BOTH_DIRECTION)
+				messageHorizontalAlignment = HorizontalAlignment.CENTER;
 
-	private double deltaShadow(ISkinParam param, ColorParam color) {
-		SkinParameter skinParameter = null;
-		if (color == ColorParam.participantBorder) {
-			skinParameter = SkinParameter.PARTICIPANT;
-		} else if (color == ColorParam.actorBorder) {
-			skinParameter = SkinParameter.ACTOR;
-		} else if (color == ColorParam.boundaryBorder) {
-			skinParameter = SkinParameter.BOUNDARY;
-		} else if (color == ColorParam.controlBorder) {
-			skinParameter = SkinParameter.CONTROL;
-		} else if (color == ColorParam.entityBorder) {
-			skinParameter = SkinParameter.ENTITY;
-		} else if (color == ColorParam.collectionsBorder) {
-			skinParameter = SkinParameter.COLLECTIONS;
-		} else if (color == ColorParam.databaseBorder) {
-			skinParameter = SkinParameter.DATABASE;
-		}
-		final boolean result = skinParameter == null ? param.shadowing(null) : param.shadowing2(null, skinParameter);
-		return result ? 4.0 : 0;
-	}
+		} else if ("reversedirection".equalsIgnoreCase(value)) {
+			if (arrowDirection == ArrowDirection.LEFT_TO_RIGHT_NORMAL)
+				messageHorizontalAlignment = HorizontalAlignment.RIGHT;
+			else if (arrowDirection == ArrowDirection.RIGHT_TO_LEFT_REVERSE)
+				messageHorizontalAlignment = HorizontalAlignment.LEFT;
+			else if (arrowDirection == ArrowDirection.BOTH_DIRECTION)
+				messageHorizontalAlignment = HorizontalAlignment.CENTER;
 
-	private SymbolContext getSymbolContext(Stereotype stereotype, ISkinParam skin, ColorParam color) {
-		if (color == ColorParam.participantBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.participantBackground),
-					getHtmlColor(skin, stereotype, ColorParam.participantBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceParticipantBorder, 1.5))
-							.withDeltaShadow(deltaShadow(skin, color));
 		}
-		if (color == ColorParam.actorBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.actorBackground),
-					getHtmlColor(skin, stereotype, ColorParam.actorBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceActorBorder, 2))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.boundaryBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.boundaryBackground),
-					getHtmlColor(skin, stereotype, ColorParam.boundaryBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceActorBorder, 2))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.controlBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.controlBackground),
-					getHtmlColor(skin, stereotype, ColorParam.controlBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceActorBorder, 2))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.collectionsBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.collectionsBackground),
-					getHtmlColor(skin, stereotype, ColorParam.collectionsBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceActorBorder, 1.5))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.queueBorder) {
-			final double tmp = deltaShadow(skin, color);
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.queueBackground),
-					getHtmlColor(skin, stereotype, ColorParam.queueBorder))
-							.withStroke(getStroke(skin, LineParam.queueBorder, 2)).withDeltaShadow(tmp);
-		}
-		if (color == ColorParam.entityBorder) {
-			final double tmp = deltaShadow(skin, color);
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.entityBackground),
-					getHtmlColor(skin, stereotype, ColorParam.entityBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceActorBorder, 2)).withDeltaShadow(tmp);
-		}
-		if (color == ColorParam.databaseBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.databaseBackground),
-					getHtmlColor(skin, stereotype, ColorParam.databaseBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceActorBorder, 2))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.sequenceLifeLineBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.sequenceLifeLineBackground),
-					getHtmlColor(skin, stereotype, ColorParam.sequenceLifeLineBorder))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.noteBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.noteBackground),
-					getHtmlColor(skin, stereotype, ColorParam.noteBorder))
-							.withStroke(getStroke(skin, LineParam.noteBorder, 1))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.sequenceGroupBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.sequenceGroupBackground),
-					getHtmlColor(skin, stereotype, ColorParam.sequenceGroupBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceGroupBorder, 2))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		if (color == ColorParam.sequenceBoxBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.sequenceBoxBackground),
-					getHtmlColor(skin, stereotype, ColorParam.sequenceBoxBorder));
-		}
-		if (color == ColorParam.sequenceReferenceBorder) {
-			return new SymbolContext(getHtmlColor(skin, stereotype, ColorParam.sequenceReferenceHeaderBackground),
-					getHtmlColor(skin, stereotype, ColorParam.sequenceReferenceBorder))
-							.withStroke(getStroke(skin, LineParam.sequenceReferenceBorder, 2))
-							.withDeltaShadow(deltaShadow(skin, color));
-		}
-		throw new IllegalArgumentException();
+
+		return new ComponentRoseArrow(styles[0], stringsToDisplay, config, messageHorizontalAlignment, param,
+				param.maxMessageSize(), param.strictUmlStyle() == false, param.responseMessageBelowArrow());
 	}
 
 	static public UStroke getStroke(ISkinParam param, LineParam lineParam, double defaultValue) {
 		final UStroke result = param.getThickness(lineParam, null);
-		if (result == null) {
-			return new UStroke(defaultValue);
-		}
+		if (result == null)
+			return UStroke.withThickness(defaultValue);
+
 		return result;
 	}
 

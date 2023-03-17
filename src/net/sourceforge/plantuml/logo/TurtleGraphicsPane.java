@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -36,24 +36,24 @@
 package net.sourceforge.plantuml.logo;
 
 import java.awt.Font;
-import java.awt.geom.Dimension2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sourceforge.plantuml.SpriteContainerEmpty;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.ugraphic.UFont;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.ULine;
-import net.sourceforge.plantuml.ugraphic.UPolygon;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.HColorSet;
-import net.sourceforge.plantuml.ugraphic.color.HColorUtils;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColorSet;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.UFont;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.ULine;
+import net.sourceforge.plantuml.klimt.shape.UPolygon;
+import net.sourceforge.plantuml.klimt.sprite.SpriteContainerEmpty;
 
 class TurtleGraphicsPane {
 	final private double width;
@@ -63,7 +63,7 @@ class TurtleGraphicsPane {
 	private double turtleDirection = 90;
 	private boolean penIsDown = true;
 	private boolean showTurtle = true;
-	private HColor penColor = HColorUtils.BLACK;
+	private HColor penColor = HColors.BLACK;
 	private List<Rectangle2D.Double> lines = new ArrayList<Rectangle2D.Double>();
 	private List<HColor> colors = new ArrayList<>();
 
@@ -122,8 +122,7 @@ class TurtleGraphicsPane {
 		final HColor turtleColor1 = htmlColorSet.getColorOrWhite("OliveDrab");
 		final HColor turtleColor2 = htmlColorSet.getColorOrWhite("MediumSpringGreen");
 
-		ug.apply(turtleColor1).apply(turtleColor2.bg()).apply(new UTranslate(x, -y))
-				.draw(poly);
+		ug.apply(turtleColor1).apply(turtleColor2.bg()).apply(new UTranslate(x, -y)).draw(poly);
 		// ug.setAntiAliasing(true);
 	}
 
@@ -196,10 +195,10 @@ class TurtleGraphicsPane {
 		}
 		drawTurtle(ug);
 		if (message != null) {
-			final FontConfiguration font = FontConfiguration.blackBlueTrue(new UFont("", Font.PLAIN, 14));
+			final FontConfiguration font = FontConfiguration.blackBlueTrue(UFont.build("", Font.PLAIN, 14));
 			final TextBlock text = Display.create(message).create(font, HorizontalAlignment.LEFT,
 					new SpriteContainerEmpty());
-			final Dimension2D dim = text.calculateDimension(ug.getStringBounder());
+			final XDimension2D dim = text.calculateDimension(ug.getStringBounder());
 			final double textHeight = dim.getHeight();
 			text.drawU(ug.apply(UTranslate.dy((height - textHeight))));
 		}

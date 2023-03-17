@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,14 +35,14 @@
  */
 package net.sourceforge.plantuml.sequencediagram.teoz;
 
-import java.awt.geom.Dimension2D;
 import java.util.List;
 
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.VerticalAlignment;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.VerticalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
 import net.sourceforge.plantuml.real.Real;
 import net.sourceforge.plantuml.sequencediagram.Delay;
 import net.sourceforge.plantuml.sequencediagram.Event;
@@ -54,8 +54,8 @@ import net.sourceforge.plantuml.skin.Component;
 import net.sourceforge.plantuml.skin.ComponentType;
 import net.sourceforge.plantuml.skin.Context2D;
 import net.sourceforge.plantuml.skin.rose.Rose;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
+import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.url.Url;
 
 public class LivingSpace {
 
@@ -170,9 +170,9 @@ public class LivingSpace {
 		if (create && verticalAlignment == VerticalAlignment.BOTTOM) {
 			return;
 		}
-		final Component comp = rose.createComponent(p.getUsedStyles(), headType, null,
-				p.getSkinParamBackcolored(skinParam), p.getDisplay(skinParam.forceSequenceParticipantUnderlined()));
-		final Dimension2D dim = comp.getPreferredDimension(ug.getStringBounder());
+		final Component comp = rose.createComponent(p.getUsedStyles(), headType, null, skinParam,
+				p.getDisplay(skinParam.forceSequenceParticipantUnderlined()));
+		final XDimension2D dim = comp.getPreferredDimension(ug.getStringBounder());
 		if (horizontalAlignment == HorizontalAlignment.RIGHT) {
 			ug = ug.apply(UTranslate.dx(-dim.getWidth()));
 		}
@@ -190,10 +190,10 @@ public class LivingSpace {
 		}
 	}
 
-	public Dimension2D getHeadPreferredDimension(StringBounder stringBounder) {
+	public XDimension2D getHeadPreferredDimension(StringBounder stringBounder) {
 		final Component comp = rose.createComponent(p.getUsedStyles(), headType, null, skinParam,
 				p.getDisplay(skinParam.forceSequenceParticipantUnderlined()));
-		final Dimension2D dim = comp.getPreferredDimension(stringBounder);
+		final XDimension2D dim = comp.getPreferredDimension(stringBounder);
 		return dim;
 	}
 
@@ -221,7 +221,7 @@ public class LivingSpace {
 		return posD;
 	}
 
-	public Real getPosB() {
+	public Real getPosB(StringBounder stringBounder) {
 		return posB;
 	}
 
@@ -245,6 +245,29 @@ public class LivingSpace {
 
 	public ParticipantEnglober getEnglober() {
 		return englober;
+	}
+
+	private double marginBefore;
+	private double marginAfter;
+
+	public void ensureMarginBefore(double margin) {
+		if (margin < 0)
+			throw new IllegalArgumentException();
+		this.marginBefore = Math.max(marginBefore, margin);
+	}
+
+	public void ensureMarginAfter(double margin) {
+		if (margin < 0)
+			throw new IllegalArgumentException();
+		this.marginAfter = Math.max(marginAfter, margin);
+	}
+
+	public Real getPosA(StringBounder stringBounder) {
+		return getPosB(stringBounder).addFixed(-marginBefore);
+	}
+
+	public Real getPosE(StringBounder stringBounder) {
+		return getPosD(stringBounder).addFixed(marginAfter);
 	}
 
 }

@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,11 +35,11 @@
  */
 package net.sourceforge.plantuml.wire;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import net.sourceforge.plantuml.ISkinSimple;
 import net.sourceforge.plantuml.command.Command;
+import net.sourceforge.plantuml.command.CommonCommands;
 import net.sourceforge.plantuml.command.PSystemCommandFactory;
 import net.sourceforge.plantuml.core.DiagramType;
 import net.sourceforge.plantuml.core.UmlSource;
@@ -51,10 +51,8 @@ public class WireDiagramFactory extends PSystemCommandFactory {
 	}
 
 	@Override
-	protected List<Command> createCommands() {
-
-		final List<Command> cmds = new ArrayList<>();
-		addCommonCommands1(cmds);
+	protected void initCommandsList(List<Command> cmds) {
+		CommonCommands.addCommonCommands1(cmds);
 		cmds.add(new CommandComponent());
 		cmds.add(new CommandSpot());
 		cmds.add(new CommandGoto());
@@ -62,12 +60,10 @@ public class WireDiagramFactory extends PSystemCommandFactory {
 		cmds.add(new CommandWLink());
 		cmds.add(new CommandNewColumn());
 		cmds.add(new CommandPrint());
-
-		return cmds;
 	}
 
 	@Override
-	public WireDiagram createEmptyDiagram(UmlSource source, ISkinSimple skinParam) {
+	public WireDiagram createEmptyDiagram(UmlSource source, Map<String, String> skinParam) {
 		return new WireDiagram(source);
 	}
 

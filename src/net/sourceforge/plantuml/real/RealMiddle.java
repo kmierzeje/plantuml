@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -36,6 +36,7 @@
 package net.sourceforge.plantuml.real;
 
 class RealMiddle extends AbstractReal implements Real {
+    // ::remove folder when __HAXE__
 
 	private final RealMoveable p1;
 	private final RealMoveable p2;
@@ -48,8 +49,8 @@ class RealMiddle extends AbstractReal implements Real {
 		this.delta = delta;
 	}
 
-	RealMiddle(RealMoveable p1, RealMoveable p2) {
-		this(p1, p2, 0);
+	private static RealMiddle create(RealMoveable p1, RealMoveable p2) {
+		return new RealMiddle(p1, p2, 0);
 	}
 
 	@Override

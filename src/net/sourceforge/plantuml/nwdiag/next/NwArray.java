@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,11 +35,17 @@
 package net.sourceforge.plantuml.nwdiag.next;
 
 public class NwArray {
+    // ::remove folder when __HAXE__
 
-	private final LinkedElement data[][];
+	private final NServerDraw data[][];
 
 	public NwArray(int lines, int cols) {
-		this.data = new LinkedElement[lines][cols];
+		this.data = new NServerDraw[lines][cols];
+	}
+
+	@Override
+	public String toString() {
+		return "lines=" + getNbLines() + " cols=" + getNbCols();
 	}
 
 	public int getNbLines() {
@@ -50,42 +56,16 @@ public class NwArray {
 		return data[0].length;
 	}
 
-	public LinkedElement get(int i, int j) {
+	public NServerDraw get(int i, int j) {
 		return data[i][j];
 	}
 
-	public LinkedElement[] getLine(int i) {
+	public NServerDraw[] getLine(int i) {
 		return data[i];
 	}
 
-	public void set(int i, int j, LinkedElement value) {
+	public void set(int i, int j, NServerDraw value) {
 		data[i][j] = value;
 	}
-
-//	public void swapCols(int col1, int col2) {
-//		if (col1 == col2) {
-//			throw new IllegalArgumentException();
-//		}
-//		for (int i = 0; i < getNbLines(); i++) {
-//			final LinkedElement tmp = data[i][col1];
-//			data[i][col1] = data[i][col2];
-//			data[i][col2] = tmp;
-//		}
-//
-//	}
-//
-//	public Footprint getFootprint(NwGroupLegacy group) {
-//		int min = Integer.MAX_VALUE;
-//		int max = Integer.MIN_VALUE;
-//		for (int i = 0; i < getNbLines(); i++) {
-//			for (int j = 0; j < getNbCols(); j++) {
-//				if (data[i][j] != null && group.matches(data[i][j])) {
-//					min = Math.min(min, j);
-//					max = Math.max(max, j);
-//				}
-//			}
-//		}
-//		return new Footprint(min, max);
-//	}
 
 }

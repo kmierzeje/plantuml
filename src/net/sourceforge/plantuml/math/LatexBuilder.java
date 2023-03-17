@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -37,15 +37,15 @@ package net.sourceforge.plantuml.math;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.Dimension2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.Icon;
 
-import net.sourceforge.plantuml.ugraphic.MutableImage;
-import net.sourceforge.plantuml.ugraphic.UImageSvg;
+import net.sourceforge.plantuml.klimt.MutableImage;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.UImageSvg;
 
 public class LatexBuilder implements ScientificEquation {
 
@@ -55,9 +55,9 @@ public class LatexBuilder implements ScientificEquation {
 		this.tex = tex;
 	}
 
-	private Dimension2D dimension;
+	private XDimension2D dimension;
 
-	public Dimension2D getDimension() {
+	public XDimension2D getDimension() {
 		return dimension;
 	}
 
@@ -99,6 +99,7 @@ public class LatexBuilder implements ScientificEquation {
 			this.icon = icon;
 		}
 
+		@Override
 		public BufferedImage getImage() {
 			if (cache == null) {
 				cache = new BufferedImage((int) (icon.getIconWidth() * scale), (int) (icon.getIconHeight() * scale),
@@ -118,12 +119,24 @@ public class LatexBuilder implements ScientificEquation {
 			return new LatexImage(icon, this.scale * scale, foregroundColor, backgroundColor);
 		}
 
+		@Override
 		public MutableImage muteColor(Color newColor) {
 			return this;
 		}
 
+		@Override
 		public MutableImage muteTransparentColor(Color newColor) {
 			return this;
+		}
+
+		@Override
+		public MutableImage monochrome() {
+			return this;
+		}
+
+		@Override
+		public double getScale() {
+			return scale;
 		}
 
 	}

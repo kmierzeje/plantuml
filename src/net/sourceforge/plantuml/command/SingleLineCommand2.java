@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -37,13 +37,14 @@ package net.sourceforge.plantuml.command;
 
 import java.util.Objects;
 
-import net.sourceforge.plantuml.LineLocation;
-import net.sourceforge.plantuml.StringLocated;
-import net.sourceforge.plantuml.command.regex.IRegex;
-import net.sourceforge.plantuml.command.regex.RegexResult;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.error.PSystemError;
-import net.sourceforge.plantuml.ugraphic.color.NoSuchColorException;
+import net.sourceforge.plantuml.klimt.color.NoSuchColorException;
+import net.sourceforge.plantuml.regex.IRegex;
+import net.sourceforge.plantuml.regex.RegexResult;
+import net.sourceforge.plantuml.text.StringLocated;
+import net.sourceforge.plantuml.utils.BlocLines;
+import net.sourceforge.plantuml.utils.LineLocation;
 
 public abstract class SingleLineCommand2<S extends Diagram> implements Command<S> {
 
@@ -68,50 +69,51 @@ public abstract class SingleLineCommand2<S extends Diagram> implements Command<S
 	}
 
 	private String myTrim(StringLocated s) {
-		if (doTrim) {
+		if (doTrim)
 			return s.getTrimmed().getString();
-		}
+
 		return s.getString();
 	}
 
 	private StringLocated myTrim2(StringLocated s) {
-		if (doTrim) {
+		if (doTrim)
 			return s.getTrimmed();
-		}
 		return s;
+
 	}
 
 	final public CommandControl isValid(BlocLines lines) {
-		if (lines.size() == 2 && syntaxWithFinalBracket()) {
+		if (lines.size() == 2 && syntaxWithFinalBracket())
 			return isValidBracket(lines);
-		}
-		if (lines.size() != 1) {
+
+		if (lines.size() != 1)
 			return CommandControl.NOT_OK;
-		}
-		if (isCommandForbidden()) {
+
+		if (isCommandForbidden())
 			return CommandControl.NOT_OK;
-		}
+
 		final StringLocated line2 = myTrim2(lines.getFirst());
 		if (syntaxWithFinalBracket() && line2.getString().endsWith("{") == false) {
 			final String vline = lines.getAt(0).getString() + " {";
-			if (isValid(BlocLines.singleString(vline)) == CommandControl.OK) {
+			if (isValid(BlocLines.singleString(vline)) == CommandControl.OK)
 				return CommandControl.OK_PARTIAL;
-			}
+
 			return CommandControl.NOT_OK;
 		}
+
 		final boolean result = pattern.match(line2);
-		if (result) {
-			actionIfCommandValid();
-		}
-		return result ? CommandControl.OK : CommandControl.NOT_OK;
+		if (result)
+			return finalVerification();
+
+		return CommandControl.NOT_OK;
 	}
 
 	private CommandControl isValidBracket(BlocLines lines) {
 		assert lines.size() == 2;
 		assert syntaxWithFinalBracket();
-		if (myTrim(lines.getAt(1)).equals("{") == false) {
+		if (myTrim(lines.getAt(1)).equals("{") == false)
 			return CommandControl.NOT_OK;
-		}
+
 		final String vline = lines.getAt(0).getString() + " {";
 		return isValid(BlocLines.singleString(vline));
 	}
@@ -120,7 +122,8 @@ public abstract class SingleLineCommand2<S extends Diagram> implements Command<S
 		return false;
 	}
 
-	protected void actionIfCommandValid() {
+	protected CommandControl finalVerification() {
+		return CommandControl.OK;
 	}
 
 	public final CommandExecutionResult execute(S system, BlocLines lines) {
@@ -128,24 +131,21 @@ public abstract class SingleLineCommand2<S extends Diagram> implements Command<S
 			assert myTrim(lines.getAt(1)).equals("{");
 			lines = BlocLines.singleString(lines.getFirst().getString() + " {");
 		}
-		if (lines.size() != 1) {
+		if (lines.size() != 1)
 			throw new IllegalArgumentException();
-		}
+
 		final StringLocated first = lines.getFirst();
 		final String line = myTrim(first);
-		if (isForbidden(line)) {
+		if (isForbidden(line))
 			return CommandExecutionResult.error("Syntax error: " + line);
-		}
 
 		final RegexResult arg = pattern.matcher(line);
-		if (arg == null) {
+		if (arg == null)
 			return CommandExecutionResult.error("Cannot parse line " + line);
-		}
-		if (system instanceof PSystemError) {
+
+		if (system instanceof PSystemError)
 			return CommandExecutionResult.error("PSystemError cannot be cast");
-		}
-		// System.err.println("lines="+lines);
-		// System.err.println("pattern="+pattern.getPattern());
+
 		try {
 			return executeArg(system, first.getLocation(), arg);
 		} catch (NoSuchColorException e) {

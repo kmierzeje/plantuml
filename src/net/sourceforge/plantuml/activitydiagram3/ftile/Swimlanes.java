@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,18 +35,11 @@
  */
 package net.sourceforge.plantuml.activitydiagram3.ftile;
 
-import java.awt.geom.Dimension2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.LineBreakStrategy;
-import net.sourceforge.plantuml.Pragma;
-import net.sourceforge.plantuml.UseStyle;
 import net.sourceforge.plantuml.activitydiagram3.Instruction;
 import net.sourceforge.plantuml.activitydiagram3.InstructionList;
 import net.sourceforge.plantuml.activitydiagram3.LinkRendering;
@@ -63,31 +56,35 @@ import net.sourceforge.plantuml.activitydiagram3.ftile.vcompact.UGraphicIntercep
 import net.sourceforge.plantuml.activitydiagram3.ftile.vcompact.VCompactFactory;
 import net.sourceforge.plantuml.activitydiagram3.gtile.GConnection;
 import net.sourceforge.plantuml.activitydiagram3.gtile.Gtile;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.AbstractTextBlock;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.TextBlockUtils;
-import net.sourceforge.plantuml.graphic.UGraphicDelegator;
-import net.sourceforge.plantuml.graphic.color.ColorType;
+import net.sourceforge.plantuml.klimt.LineBreakStrategy;
+import net.sourceforge.plantuml.klimt.UChange;
+import net.sourceforge.plantuml.klimt.UShape;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.compress.CompressionMode;
+import net.sourceforge.plantuml.klimt.compress.SlotFinder;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.LimitFinder;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.drawing.UGraphicDelegator;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.MinMax;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlockUtils;
+import net.sourceforge.plantuml.klimt.shape.URectangle;
+import net.sourceforge.plantuml.skin.Pragma;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.style.Styleable;
 import net.sourceforge.plantuml.svek.UGraphicForSnake;
-import net.sourceforge.plantuml.ugraphic.LimitFinder;
-import net.sourceforge.plantuml.ugraphic.MinMax;
-import net.sourceforge.plantuml.ugraphic.UChange;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.URectangle;
-import net.sourceforge.plantuml.ugraphic.UShape;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.comp.CompressionMode;
-import net.sourceforge.plantuml.ugraphic.comp.SlotFinder;
 import net.sourceforge.plantuml.utils.MathUtils;
 
 public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable {
@@ -100,7 +97,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	private final List<LaneDivider> dividers = new ArrayList<>();
 	private Swimlane currentSwimlane = null;
 
-	private final Instruction root = new InstructionList();
+	private final Instruction root = InstructionList.empty();
 	private Instruction currentInstruction = root;
 
 	private LinkRendering nextLinkRenderer = LinkRendering.none();
@@ -113,15 +110,15 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	private List<Swimlane> swimlanesSpecial() {
 		if (swimlanesSpecial.size() == 0) {
 			swimlanesSpecial.addAll(swimlanesRaw);
-			final Swimlane last = new Swimlane("");
+			final Swimlane last = new Swimlane("", Integer.MAX_VALUE);
 			last.setMinMax(MinMax.getEmpty(true));
 			swimlanesSpecial.add(last);
 		}
 		return Collections.unmodifiableList(swimlanesSpecial);
 	}
 
-	public StyleSignature getDefaultStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.activityDiagram, SName.swimlane);
+	public StyleSignatureBasic getStyleSignature() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.activityDiagram, SName.swimlane);
 	}
 
 	public Swimlanes(ISkinParam skinParam, Pragma pragma) {
@@ -131,7 +128,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 
 	protected Style getStyle() {
 		if (style == null) {
-			this.style = getDefaultStyleDefinition().getMergedStyle(skinParam.getCurrentStyleBuilder());
+			this.style = getStyleSignature().getMergedStyle(skinParam.getCurrentStyleBuilder());
 		}
 		return style;
 	}
@@ -154,21 +151,20 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 
 	public void swimlane(String name, HColor color, Display label) {
 		currentSwimlane = getOrCreate(name);
-		if (color != null) {
+		if (color != null)
 			currentSwimlane.setSpecificColorTOBEREMOVED(ColorType.BACK, color);
-		}
-		if (Display.isNull(label) == false) {
+
+		if (Display.isNull(label) == false)
 			currentSwimlane.setDisplay(label);
-		}
+
 	}
 
 	private Swimlane getOrCreate(String name) {
-		for (Swimlane s : swimlanes()) {
-			if (s.getName().equals(name)) {
+		for (Swimlane s : swimlanes())
+			if (s.getName().equals(name))
 				return s;
-			}
-		}
-		final Swimlane result = new Swimlane(name);
+
+		final Swimlane result = new Swimlane(name, swimlanesRaw.size());
 		swimlanesRaw.add(result);
 		return result;
 	}
@@ -189,13 +185,14 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 				final Ftile tile1 = connection.getFtile1();
 				final Ftile tile2 = connection.getFtile2();
 
-				if (tile1 == null || tile2 == null) {
+				if (tile1 == null || tile2 == null)
 					return;
-				}
+
 				if (tile1.getSwimlaneOut() != tile2.getSwimlaneIn()) {
 					final ConnectionCross connectionCross = new ConnectionCross(connection);
 					connectionCross.drawU(getUg());
 				}
+				// ::comment when __CORE__
 			} else if (shape instanceof Gtile) {
 				final Gtile tile = (Gtile) shape;
 				tile.drawU(this);
@@ -205,6 +202,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 				connection.drawTranslatable(getUg());
 				// connection.drawU(this);
 				// throw new UnsupportedOperationException();
+				// ::done
 			}
 		}
 
@@ -215,7 +213,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	}
 
 	public final void computeSize(StringBounder stringBounder) {
-		final SlotFinder ug = new SlotFinder(CompressionMode.ON_Y, stringBounder);
+		final SlotFinder ug = SlotFinder.create(CompressionMode.ON_Y, stringBounder);
 		if (swimlanes().size() > 1) {
 			TextBlock full = root.createFtile(getFtileFactory(stringBounder));
 			computeSizeInternal(ug, full);
@@ -224,10 +222,12 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	}
 
 	public final void drawU(UGraphic ug) {
+		// ::comment when __CORE__
 		if (Gtile.USE_GTILE) {
 			drawGtile(ug);
 			return;
 		}
+		// ::done
 
 		TextBlock full = root.createFtile(getFtileFactory(ug.getStringBounder()));
 
@@ -242,6 +242,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 		}
 	}
 
+	// ::comment when __CORE__
 	private void drawGtile(UGraphic ug) {
 		TextBlock full = root.createGtile(skinParam, ug.getStringBounder());
 
@@ -255,27 +256,24 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 		}
 
 	}
+	// ::done
 
 	private TextBlock getTitle(Swimlane swimlane) {
 		final HorizontalAlignment horizontalAlignment = HorizontalAlignment.LEFT;
-		FontConfiguration fontConfiguration = new FontConfiguration(skinParam, FontParam.SWIMLANE_TITLE, null);
-		if (UseStyle.useBetaStyle()) {
-			fontConfiguration = getStyle().getFontConfiguration(skinParam.getThemeStyle(),
-					skinParam.getIHtmlColorSet());
-		}
+		final FontConfiguration fontConfiguration = getStyle().getFontConfiguration(skinParam.getIHtmlColorSet());
+
 		LineBreakStrategy wrap = getWrap();
-		if (wrap.isAuto()) {
+		if (wrap.isAuto())
 			wrap = new LineBreakStrategy("" + ((int) swimlane.getActualWidth()));
-		}
 
 		return swimlane.getDisplay().create9(fontConfiguration, horizontalAlignment, skinParam, wrap);
 	}
 
 	private LineBreakStrategy getWrap() {
 		LineBreakStrategy wrap = skinParam.swimlaneWrapTitleWidth();
-		if (wrap == LineBreakStrategy.NONE) {
-			wrap = skinParam.wrapWidth();
-		}
+		if (wrap == LineBreakStrategy.NONE)
+			wrap = style.wrapWidth();
+
 		return wrap;
 	}
 
@@ -299,7 +297,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 
 		drawTitlesBackground(ug);
 
-		final Dimension2D dimensionFull = full.calculateDimension(stringBounder);
+		final XDimension2D dimensionFull = full.calculateDimension(stringBounder);
 		int i = 0;
 		assert dividers.size() == swimlanes().size() + 1;
 		for (Swimlane swimlane : swimlanesSpecial()) {
@@ -307,13 +305,13 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 
 			final double xpos = swimlane.getTranslate().getDx() + swimlane.getMinMax().getMinX();
 			final HColor back = swimlane.getColors().getColor(ColorType.BACK);
-			if (back != null) {
+			if (back != null && back.isTransparent() == false) {
 				final LaneDivider divider2 = dividers.get(i + 1);
 				final UGraphic background = ug.apply(back.bg()).apply(back)
 						.apply(UTranslate.dx(xpos - divider1.getX2()));
 				final double width = swimlane.getActualWidth() + divider1.getX2() + divider2.getX1();
 				final double height = dimensionFull.getHeight() + titleHeightTranslate.getDy();
-				background.draw(new URectangle(width, height).ignoreForCompressionOnX().ignoreForCompressionOnY());
+				background.draw(URectangle.build(width, height).ignoreForCompressionOnX().ignoreForCompressionOnY());
 			}
 
 			full.drawU(new UGraphicInterceptorOneSwimlane(ug, swimlane, swimlanes()).apply(swimlane.getTranslate())
@@ -333,15 +331,12 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	}
 
 	private void drawTitlesBackground(UGraphic ug) {
-		HColor color = skinParam.getHtmlColor(ColorParam.swimlaneTitleBackground, null, false);
-		if (UseStyle.useBetaStyle()) {
-			color = getStyle().value(PName.BackGroundColor).asColor(skinParam.getThemeStyle(),
-					skinParam.getIHtmlColorSet());
-		}
+		final HColor color = getStyle().value(PName.BackGroundColor).asColor(skinParam.getIHtmlColorSet());
+
 		if (color != null) {
 			final double titleHeight = getTitlesHeight(ug.getStringBounder());
 			double fullWidth = swimlanesSpecial().get(swimlanesSpecial().size() - 1).getTranslate().getDx() - 2 * 5 - 1;
-			final URectangle back = new URectangle(fullWidth, titleHeight).ignoreForCompressionOnX()
+			final URectangle back = URectangle.build(fullWidth, titleHeight).ignoreForCompressionOnX()
 					.ignoreForCompressionOnY();
 			ug.apply(UTranslate.dx(5)).apply(color.bg()).apply(color).draw(back);
 		}
@@ -359,7 +354,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	private void computeDrawingWidths(UGraphic ug, TextBlock full) {
 		final StringBounder stringBounder = ug.getStringBounder();
 		for (Swimlane swimlane : swimlanes()) {
-			final LimitFinder limitFinder = new LimitFinder(stringBounder, false);
+			final LimitFinder limitFinder = LimitFinder.create(stringBounder, false);
 			final UGraphicInterceptorOneSwimlane interceptor = new UGraphicInterceptorOneSwimlane(
 					new UGraphicForSnake(limitFinder), swimlane, swimlanes());
 			full.drawU(interceptor);
@@ -374,11 +369,10 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 
 		double min = skinParam.swimlaneWidth();
 
-		if (min == ISkinParam.SWIMLANE_WIDTH_SAME) {
-			for (Swimlane swimlane : swimlanes()) {
+		if (min == ISkinParam.SWIMLANE_WIDTH_SAME)
+			for (Swimlane swimlane : swimlanes())
 				min = Math.max(min, getWidthWithoutTitle(swimlane));
-			}
-		}
+
 		final StringBounder stringBounder = ug.getStringBounder();
 
 		for (int i = 0; i < swimlanesSpecial().size(); i++) {
@@ -388,7 +382,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 		}
 
 		final UTranslate titleHeightTranslate = getTitleHeightTranslate(stringBounder);
-		final Dimension2D dimensionFull = full.calculateDimension(stringBounder);
+		final XDimension2D dimensionFull = full.calculateDimension(stringBounder);
 
 		dividers.clear();
 		double xpos = 0;
@@ -410,15 +404,15 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 	}
 
 	public double getHalfMissingSpace(StringBounder stringBounder, int i, double min) {
-		if (i == 0 || i > swimlanesSpecial().size()) {
+		if (i == 0 || i > swimlanesSpecial().size())
 			return 5;
-		}
+
 		final Swimlane swimlane = swimlanesSpecial().get(i - 1);
 		final double swimlaneActualWidth = Math.max(min, getWidthWithoutTitle(swimlane));
 		final double titleWidth = getTitle(swimlane).calculateDimension(stringBounder).getWidth();
-		if (titleWidth <= swimlaneActualWidth) {
+		if (titleWidth <= swimlaneActualWidth)
 			return 5;
-		}
+
 		assert titleWidth > swimlaneActualWidth;
 		return Math.max(5, 5 + (titleWidth - swimlaneActualWidth) / 2);
 	}
@@ -427,7 +421,7 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 		return swimlane.getMinMax().getWidth();
 	}
 
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
 		return getMinMax(stringBounder).getDimension();
 	}
 
@@ -455,9 +449,9 @@ public class Swimlanes extends AbstractTextBlock implements TextBlock, Styleable
 
 	@Override
 	public MinMax getMinMax(StringBounder stringBounder) {
-		if (cachedMinMax == null) {
+		if (cachedMinMax == null)
 			cachedMinMax = TextBlockUtils.getMinMax(this, stringBounder, false);
-		}
+
 		return cachedMinMax;
 	}
 

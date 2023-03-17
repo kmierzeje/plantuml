@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,7 +35,6 @@
  */
 package net.sourceforge.plantuml.sequencediagram.graphic;
 
-import java.awt.geom.Dimension2D;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -43,39 +42,37 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sourceforge.plantuml.AnnotatedWorker;
+import net.sourceforge.plantuml.AnnotatedBuilder;
 import net.sourceforge.plantuml.FileFormatOption;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.activitydiagram3.ftile.EntityImageLegend;
 import net.sourceforge.plantuml.core.ImageData;
-import net.sourceforge.plantuml.cucadiagram.Display;
 import net.sourceforge.plantuml.cucadiagram.DisplaySection;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.TextBlockUtils;
-import net.sourceforge.plantuml.graphic.UDrawable;
-import net.sourceforge.plantuml.graphic.VerticalAlignment;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontParam;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.VerticalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlockUtils;
+import net.sourceforge.plantuml.klimt.shape.UDrawable;
 import net.sourceforge.plantuml.png.PngTitler;
 import net.sourceforge.plantuml.sequencediagram.Event;
 import net.sourceforge.plantuml.sequencediagram.Newpage;
 import net.sourceforge.plantuml.sequencediagram.Participant;
 import net.sourceforge.plantuml.sequencediagram.SequenceDiagram;
 import net.sourceforge.plantuml.skin.rose.Rose;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.style.StyleSignature;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 
 public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 
 	private final SequenceDiagram diagram;
 	private final DrawableSet drawableSet;
-	private final Dimension2D fullDimension;
+	private final XDimension2D fullDimension;
 	private final List<Page> pages;
 	private final FileFormatOption fileFormatOption;
 	private final StringBounder stringBounder;
@@ -87,9 +84,8 @@ public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 		final DrawableSetInitializer initializer = new DrawableSetInitializer(skin, diagram.getSkinParam(),
 				diagram.isShowFootbox(), diagram.getAutonewpage());
 
-		for (Participant p : diagram.participants()) {
+		for (Participant p : diagram.participants())
 			initializer.addParticipant(p, diagram.getEnglober(p));
-		}
 
 		for (Event ev : diagram.events()) {
 			initializer.addEvent(ev);
@@ -108,16 +104,15 @@ public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 		}
 		drawableSet = initializer.createDrawableSet(stringBounder);
 		final List<Newpage> newpages = new ArrayList<>();
-		for (Event ev : drawableSet.getAllEvents()) {
-			if (ev instanceof Newpage) {
+		for (Event ev : drawableSet.getAllEvents())
+			if (ev instanceof Newpage)
 				newpages.add((Newpage) ev);
-			}
-		}
+
 		fullDimension = drawableSet.getDimension();
 		final Map<Newpage, Double> positions = new LinkedHashMap<Newpage, Double>();
-		for (Newpage n : newpages) {
+		for (Newpage n : newpages)
 			positions.put(n, initializer.getYposition(stringBounder, n));
-		}
+
 		pages = create(drawableSet, positions, diagram.isShowFootbox(), diagram.getTitle().getDisplay()).getPages();
 	}
 
@@ -138,31 +133,40 @@ public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 				newpageHeight, title);
 	}
 
-	public ImageData createOne(OutputStream os, final int index, boolean isWithMetadata) throws IOException {
+	@Override
+	public void createOneGraphic(UGraphic ug) {
+		final UDrawable drawable = createUDrawable(0);
+		drawable.drawU(ug);
 
+	}
+
+	@Override
+	public ImageData createOne(OutputStream os, final int index, boolean isWithMetadata) throws IOException {
+		final UDrawable drawable = createUDrawable(index);
+		return diagram.createImageBuilder(fileFormatOption).drawable(drawable).write(os);
+	}
+
+	private UDrawable createUDrawable(final int index) {
 		final Page page = pages.get(index);
-		final SequenceDiagramArea area = new SequenceDiagramArea(fullDimension.getWidth(), page.getHeight());
+		final AnnotatedBuilder builder = new AnnotatedBuilder(diagram, diagram.getSkinParam(), stringBounder);
+		double pageHeight = page.getHeight();
+		if (builder.hasMainFrame())
+			pageHeight += builder.mainFrameSuppHeight();
+
+		final SequenceDiagramArea area = new SequenceDiagramArea(fullDimension.getWidth(), pageHeight);
 
 		final TextBlock compTitle;
-		final AnnotatedWorker annotatedWorker = new AnnotatedWorker(diagram, diagram.getSkinParam(), stringBounder);
-		final TextBlock caption = annotatedWorker.getCaption();
+		final TextBlock caption = builder.getCaption();
 		area.setCaptionArea(caption.calculateDimension(stringBounder));
 
 		if (Display.isNull(page.getTitle())) {
 			compTitle = null;
 		} else {
-			if (UseStyle.useBetaStyle()) {
-				final Style style = StyleSignature.of(SName.root, SName.document, SName.title)
-						.getMergedStyle(diagram.getSkinParam().getCurrentStyleBuilder());
-				compTitle = style.createTextBlockBordered(page.getTitle(), diagram.getSkinParam().getIHtmlColorSet(),
-						diagram.getSkinParam());
-			} else {
-				compTitle = TextBlockUtils.withMargin(
-						TextBlockUtils.title(new FontConfiguration(drawableSet.getSkinParam(), FontParam.TITLE, null),
-								page.getTitle(), drawableSet.getSkinParam()),
-						7, 7);
-			}
-			final Dimension2D dimTitle = compTitle.calculateDimension(stringBounder);
+			final Style style = StyleSignatureBasic.of(SName.root, SName.document, SName.title)
+					.getMergedStyle(diagram.getSkinParam().getCurrentStyleBuilder());
+			compTitle = style.createTextBlockBordered(page.getTitle(), diagram.getSkinParam().getIHtmlColorSet(),
+					diagram.getSkinParam(), Style.ID_TITLE);
+			final XDimension2D dimTitle = compTitle.calculateDimension(stringBounder);
 			area.setTitleArea(dimTitle.getWidth(), dimTitle.getHeight());
 		}
 		area.initFooter(getPngTitler(FontParam.FOOTER, index), stringBounder);
@@ -172,28 +176,23 @@ public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 		if (diagram.getLegend().isNull()) {
 			legendBlock = TextBlockUtils.empty(0, 0);
 		} else {
-			if (UseStyle.useBetaStyle()) {
-				final Style style = StyleSignature.of(SName.root, SName.document, SName.legend)
-						.getMergedStyle(diagram.getSkinParam().getCurrentStyleBuilder());
-				legendBlock = style.createTextBlockBordered(diagram.getLegend().getDisplay(),
-						diagram.getSkinParam().getIHtmlColorSet(), diagram.getSkinParam());
-			} else {
-				legendBlock = EntityImageLegend.create(diagram.getLegend().getDisplay(), diagram.getSkinParam());
-			}
+			final Style style = StyleSignatureBasic.of(SName.root, SName.document, SName.legend)
+					.getMergedStyle(diagram.getSkinParam().getCurrentStyleBuilder());
+			legendBlock = style.createTextBlockBordered(diagram.getLegend().getDisplay(),
+					diagram.getSkinParam().getIHtmlColorSet(), diagram.getSkinParam(), Style.ID_LEGEND);
 		}
-		final Dimension2D dimLegend = legendBlock.calculateDimension(stringBounder);
+		final XDimension2D dimLegend = legendBlock.calculateDimension(stringBounder);
 		area.setLegend(dimLegend, isLegendTop(), diagram.getLegend().getHorizontalAlignment());
 
 		final UDrawable drawable = new UDrawable() {
 			public void drawU(UGraphic ug) {
 
 				double delta = 0;
-				if (index > 0) {
+				if (index > 0)
 					delta = page.getNewpage1() - page.getHeaderHeight();
-				}
-				if (delta < 0) {
+
+				if (delta < 0)
 					delta = 0;
-				}
 
 				if (compTitle != null) {
 					final HColor back = diagram.calculateBackColor();
@@ -207,27 +206,27 @@ public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 						area.getSequenceAreaY());
 				TextBlock core = drawableSet.asTextBlock(delta, fullDimension.getWidth(), page,
 						diagram.isShowFootbox());
-				core = annotatedWorker.addFrame(core);
+				core = builder.decoreWithFrame(core);
 				core.drawU(ug.apply(forCore));
 
 				drawHeader(area, ug, index);
 				drawFooter(area, ug, index);
 
-				if (area.hasLegend()) {
+				if (area.hasLegend())
 					legendBlock.drawU(ug.apply(new UTranslate(area.getLegendX(), area.getLegendY())));
-				}
+
 			}
 
 		};
-		return diagram.createImageBuilder(fileFormatOption).drawable(drawable).write(os);
+		return drawable;
 	}
 
 	private void drawFooter(SequenceDiagramArea area, UGraphic ug, int page) {
 		final PngTitler pngTitler = getPngTitler(FontParam.FOOTER, page);
 		final TextBlock text = pngTitler.getRibbonBlock();
-		if (text == null) {
+		if (text == null)
 			return;
-		}
+
 		text.drawU(ug.apply(
 				new UTranslate(area.getFooterX(diagram.getFooter().getHorizontalAlignment()), area.getFooterY())));
 	}
@@ -235,27 +234,20 @@ public class SequenceDiagramFileMakerPuma2 implements FileMaker {
 	private void drawHeader(SequenceDiagramArea area, UGraphic ug, int page) {
 		final PngTitler pngTitler = getPngTitler(FontParam.HEADER, page);
 		final TextBlock text = pngTitler.getRibbonBlock();
-		if (text == null) {
+		if (text == null)
 			return;
-		}
+
 		text.drawU(ug.apply(
 				new UTranslate(area.getHeaderX(diagram.getHeader().getHorizontalAlignment()), area.getHeaderY())));
 	}
 
 	private PngTitler getPngTitler(final FontParam fontParam, int page) {
 		final ISkinParam skinParam = diagram.getSkinParam();
-		final HColor hyperlinkColor = skinParam.getHyperlinkColor();
-		final HColor titleColor = skinParam.getFontHtmlColor(null, fontParam);
-		final String fontFamily = skinParam.getFont(null, false, fontParam).getFamily(null);
-		final int fontSize = skinParam.getFont(null, false, fontParam).getSize();
 		final DisplaySection display = diagram.getFooterOrHeaderTeoz(fontParam).withPage(page + 1, pages.size());
-		Style style = null;
-		if (UseStyle.useBetaStyle()) {
-			final StyleSignature def = fontParam.getStyleDefinition(null);
-			style = def.getMergedStyle(skinParam.getCurrentStyleBuilder());
-		}
-		return new PngTitler(titleColor, display, fontSize, fontFamily, hyperlinkColor,
-				skinParam.useUnderlineForHyperlink(), style, skinParam.getIHtmlColorSet(), skinParam);
+		final StyleSignatureBasic def = fontParam.getStyleDefinition(null);
+		final Style style = def.getMergedStyle(skinParam.getCurrentStyleBuilder());
+
+		return new PngTitler(display, style, skinParam.getIHtmlColorSet(), skinParam);
 	}
 
 	private boolean isLegendTop() {

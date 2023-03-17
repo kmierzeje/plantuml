@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,36 +35,31 @@
  */
 package net.sourceforge.plantuml.svek;
 
-import java.awt.geom.Dimension2D;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.UmlDiagramType;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.cucadiagram.dot.DotData;
-import net.sourceforge.plantuml.graphic.AbstractTextBlock;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlockUtils;
-import net.sourceforge.plantuml.skin.rose.Rose;
+import net.sourceforge.plantuml.decoration.Rainbow;
+import net.sourceforge.plantuml.dot.DotData;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.MinMax;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlockUtils;
+import net.sourceforge.plantuml.klimt.shape.UHidden;
+import net.sourceforge.plantuml.stereo.Stereotype;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleBuilder;
 import net.sourceforge.plantuml.style.StyleSignature;
-import net.sourceforge.plantuml.ugraphic.MinMax;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UHidden;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.HColorUtils;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 
 public final class SvekResult extends AbstractTextBlock implements IEntityImage {
-
-	private final Rose rose = new Rose();
+	// ::remove file when __CORE__
 
 	private final DotData dotData;
 	private final DotStringFactory dotStringFactory;
@@ -76,13 +71,14 @@ public final class SvekResult extends AbstractTextBlock implements IEntityImage 
 
 	public void drawU(UGraphic ug) {
 
-		for (Cluster cluster : dotStringFactory.getBibliotekon().allCluster()) {
-			cluster.drawU(ug, new UStroke(1.5), dotData.getUmlDiagramType(), dotData.getSkinParam());
-		}
+		for (Cluster cluster : dotStringFactory.getBibliotekon().allCluster())
+			cluster.drawU(ug, dotData.getUmlDiagramType(), dotData.getSkinParam());
 
-		HColor color = rose.getHtmlColor(dotData.getSkinParam(), null, getArrowColorParam());
-		color = HColorUtils.noGradient(color);
-		UStroke stroke = null;
+		final Style style2 = getDefaultStyleDefinition(null)
+				.getMergedStyle(dotData.getSkinParam().getCurrentStyleBuilder());
+
+		final HColor borderColor = HColors
+				.noGradient(style2.value(PName.LineColor).asColor(dotData.getSkinParam().getIHtmlColorSet()));
 
 		for (SvekNode node : dotStringFactory.getBibliotekon().allNodes()) {
 			final double minX = node.getMinX();
@@ -90,74 +86,60 @@ public final class SvekResult extends AbstractTextBlock implements IEntityImage 
 			final UGraphic ug2 = node.isHidden() ? ug.apply(UHidden.HIDDEN) : ug;
 			final IEntityImage image = node.getImage();
 			image.drawU(ug2.apply(new UTranslate(minX, minY)));
-			if (image instanceof Untranslated) {
-				((Untranslated) image).drawUntranslated(ug.apply(color), minX, minY);
-			}
-			// shape.getImage().drawNeighborhood(ug2, minX, minY);
+			if (image instanceof Untranslated)
+				((Untranslated) image).drawUntranslated(ug.apply(borderColor), minX, minY);
+
 		}
 
 		final Set<String> ids = new HashSet<>();
 
+		computeKal();
+
 		for (SvekLine line : dotStringFactory.getBibliotekon().allLines()) {
 			final UGraphic ug2 = line.isHidden() ? ug.apply(UHidden.HIDDEN) : ug;
 
-			if (UseStyle.useBetaStyle()) {
-				final StyleBuilder currentStyleBuilder = line.getCurrentStyleBuilder();
-				final Style style = getDefaultStyleDefinition(line.getStereotype()).getMergedStyle(currentStyleBuilder);
-				color = style.value(PName.LineColor).asColor(dotData.getSkinParam().getThemeStyle(),
-						dotData.getSkinParam().getIHtmlColorSet());
-				stroke = style.getStroke();
-				color = HColorUtils.noGradient(color);
-			}
+			final StyleBuilder currentStyleBuilder = line.getCurrentStyleBuilder();
+			final Style styleLine = getDefaultStyleDefinition(line.getStereotype()).getMergedStyle(currentStyleBuilder);
 
-			line.drawU(ug2, stroke, color, ids);
+			final Rainbow rainbow = Rainbow.build(styleLine, dotData.getSkinParam().getIHtmlColorSet());
+
+			line.drawU(ug2, ids, styleLine.getStroke(), rainbow);
 		}
+
+		for (SvekNode node : dotStringFactory.getBibliotekon().allNodes())
+			node.drawKals(ug);
 
 	}
 
-	private ColorParam getArrowColorParam() {
-		if (dotData.getUmlDiagramType() == UmlDiagramType.CLASS) {
-			return ColorParam.arrow;
-		} else if (dotData.getUmlDiagramType() == UmlDiagramType.OBJECT) {
-			return ColorParam.arrow;
-		} else if (dotData.getUmlDiagramType() == UmlDiagramType.DESCRIPTION) {
-			return ColorParam.arrow;
-		} else if (dotData.getUmlDiagramType() == UmlDiagramType.ACTIVITY) {
-			return ColorParam.arrow;
-		} else if (dotData.getUmlDiagramType() == UmlDiagramType.STATE) {
-			return ColorParam.arrow;
-		}
-		throw new IllegalStateException();
+	private void computeKal() {
+		for (SvekLine line : dotStringFactory.getBibliotekon().allLines())
+			line.computeKal();
+		for (SvekNode node : dotStringFactory.getBibliotekon().allNodes())
+			node.fixOverlap();
 	}
 
 	private StyleSignature getDefaultStyleDefinition(Stereotype stereotype) {
-		StyleSignature result = StyleSignature.of(SName.root, SName.element, dotData.getUmlDiagramType().getStyleName(),
-				SName.arrow);
-		if (stereotype != null) {
-			result = result.with(stereotype);
-		}
-		return result;
+		StyleSignature result = StyleSignatureBasic.of(SName.root, SName.element,
+				dotData.getUmlDiagramType().getStyleName(), SName.arrow);
+
+		return result.withTOBECHANGED(stereotype);
 	}
 
 	// Duplicate SvekResult / GeneralImageBuilder
 	public HColor getBackcolor() {
-		if (UseStyle.useBetaStyle()) {
-			final Style style = StyleSignature.of(SName.root, SName.document)
-					.getMergedStyle(dotData.getSkinParam().getCurrentStyleBuilder());
-			return style.value(PName.BackGroundColor).asColor(dotData.getSkinParam().getThemeStyle(),
-					dotData.getSkinParam().getIHtmlColorSet());
-		}
-		return dotData.getSkinParam().getBackgroundColor();
+		final Style style = StyleSignatureBasic.of(SName.root, SName.document)
+				.getMergedStyle(dotData.getSkinParam().getCurrentStyleBuilder());
+		return style.value(PName.BackGroundColor).asColor(dotData.getSkinParam().getIHtmlColorSet());
 	}
 
 	private MinMax minMax;
 
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
 		if (minMax == null) {
 			minMax = TextBlockUtils.getMinMax(this, stringBounder, false);
 			dotStringFactory.moveSvek(6 - minMax.getMinX(), 6 - minMax.getMinY());
 		}
-		return Dimension2DDouble.delta(minMax.getDimension(), 0, 12);
+		return minMax.getDimension().delta(0, 12);
 	}
 
 	public ShapeType getShapeType() {

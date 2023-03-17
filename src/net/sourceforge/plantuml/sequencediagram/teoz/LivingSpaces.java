@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,20 +35,20 @@
  */
 package net.sourceforge.plantuml.sequencediagram.teoz;
 
-import java.awt.geom.Dimension2D;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.VerticalAlignment;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.VerticalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
 import net.sourceforge.plantuml.real.Real;
 import net.sourceforge.plantuml.sequencediagram.Participant;
 import net.sourceforge.plantuml.skin.Context2D;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
 
 public class LivingSpaces {
 
@@ -62,8 +62,8 @@ public class LivingSpaces {
 		LivingSpace previous = null;
 		for (LivingSpace current : all.values()) {
 			if (previous != null) {
-				final Real point1 = previous.getPosD(stringBounder);
-				final Real point2 = current.getPosB();
+				final Real point1 = previous.getPosE(stringBounder);
+				final Real point2 = current.getPosA(stringBounder);
 				point2.ensureBiggerThan(point1.addFixed(10));
 			}
 			previous = current;
@@ -108,10 +108,10 @@ public class LivingSpaces {
 		final StringBounder stringBounder = ug.getStringBounder();
 		final double headHeight = getHeadHeight(stringBounder);
 		for (LivingSpace livingSpace : values()) {
-			final double x = livingSpace.getPosB().getCurrentValue();
+			final double x = livingSpace.getPosB(stringBounder).getCurrentValue();
 			double y = 0;
 			if (verticalAlignment == VerticalAlignment.BOTTOM) {
-				final Dimension2D dimHead = livingSpace.getHeadPreferredDimension(stringBounder);
+				final XDimension2D dimHead = livingSpace.getHeadPreferredDimension(stringBounder);
 				y = headHeight - dimHead.getHeight();
 			}
 			livingSpace.drawHead(ug.apply(new UTranslate(x, y)), context, verticalAlignment, HorizontalAlignment.LEFT);
@@ -121,7 +121,7 @@ public class LivingSpaces {
 	public double getHeadHeight(StringBounder stringBounder) {
 		double headHeight = 0;
 		for (LivingSpace livingSpace : values()) {
-			final Dimension2D headDim = livingSpace.getHeadPreferredDimension(stringBounder);
+			final XDimension2D headDim = livingSpace.getHeadPreferredDimension(stringBounder);
 			headHeight = Math.max(headHeight, headDim.getHeight());
 		}
 		return headHeight;
@@ -141,9 +141,9 @@ public class LivingSpaces {
 	}
 
 	public void delayOn(double y, double height) {
-		for (LivingSpace livingSpace : values()) {
+		for (LivingSpace livingSpace : values())
 			livingSpace.delayOn(y, height);
-		}
+
 	}
 
 	public int size() {

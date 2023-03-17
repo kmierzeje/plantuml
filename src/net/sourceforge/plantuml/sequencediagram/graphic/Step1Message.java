@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -38,11 +38,9 @@ package net.sourceforge.plantuml.sequencediagram.graphic;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.OptionFlags;
-import net.sourceforge.plantuml.PaddingParam;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.StringBounder;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
 import net.sourceforge.plantuml.sequencediagram.InGroupable;
 import net.sourceforge.plantuml.sequencediagram.Message;
 import net.sourceforge.plantuml.sequencediagram.Note;
@@ -53,6 +51,8 @@ import net.sourceforge.plantuml.skin.ArrowConfiguration;
 import net.sourceforge.plantuml.skin.ArrowHead;
 import net.sourceforge.plantuml.skin.Component;
 import net.sourceforge.plantuml.skin.ComponentType;
+import net.sourceforge.plantuml.skin.PaddingParam;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.Style;
 
 class Step1Message extends Step1Abstract {
@@ -74,7 +74,7 @@ class Step1Message extends Step1Abstract {
 			final ArrowComponent comp = drawingSet.getSkin().createComponentArrow(message.getUsedStyles(), getConfig(),
 					drawingSet.getSkinParam(), message.getLabelNumbered());
 			final Component compAliveBox = drawingSet.getSkin().createComponent(
-					new Style[] { ComponentType.ALIVE_BOX_OPEN_OPEN.getDefaultStyleDefinition()
+					new Style[] { ComponentType.ALIVE_BOX_OPEN_OPEN.getStyleSignature()
 							.getMergedStyle(drawingSet.getSkinParam().getCurrentStyleBuilder()) },
 					ComponentType.ALIVE_BOX_OPEN_OPEN, null, drawingSet.getSkinParam(), null);
 
@@ -85,8 +85,10 @@ class Step1Message extends Step1Abstract {
 		final List<Note> noteOnMessages = message.getNoteOnMessages();
 		for (Note noteOnMessage : noteOnMessages) {
 			final ISkinParam skinParam = noteOnMessage.getSkinParamBackcolored(drawingSet.getSkinParam());
-			addNote(drawingSet.getSkin().createComponentNote(noteOnMessage.getUsedStyles(),
-					noteOnMessage.getNoteStyle().getNoteComponentType(), skinParam, noteOnMessage.getStrings()));
+			final Component note = drawingSet.getSkin().createComponentNote(noteOnMessage.getUsedStyles(),
+					noteOnMessage.getNoteStyle().getNoteComponentType(), skinParam, noteOnMessage.getStrings(),
+					noteOnMessage.getColors());
+			addNote(note);
 		}
 
 	}
@@ -224,7 +226,7 @@ class Step1Message extends Step1Abstract {
 	private double getHalfLifeWidth() {
 		return getDrawingSet().getSkin()
 				.createComponent(
-						new Style[] { ComponentType.ALIVE_BOX_OPEN_OPEN.getDefaultStyleDefinition()
+						new Style[] { ComponentType.ALIVE_BOX_OPEN_OPEN.getStyleSignature()
 								.getMergedStyle(getDrawingSet().getSkinParam().getCurrentStyleBuilder()) },
 						ComponentType.ALIVE_BOX_OPEN_OPEN, null, getDrawingSet().getSkinParam(), Display.create(""))
 				.getPreferredWidth(null) / 2;

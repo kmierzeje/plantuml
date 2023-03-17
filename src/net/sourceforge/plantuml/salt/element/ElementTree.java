@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,19 +35,17 @@
  */
 package net.sourceforge.plantuml.salt.element;
 
-import java.awt.geom.Dimension2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.ISkinSimple;
 import net.sourceforge.plantuml.StringUtils;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.ugraphic.UFont;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.color.HColorSet;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.font.UFont;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.style.ISkinSimple;
 
 public class ElementTree extends AbstractElement {
 
@@ -81,11 +79,11 @@ public class ElementTree extends AbstractElement {
 		}
 	}
 
-	public Dimension2D getPreferredDimension(StringBounder stringBounder, double x, double y) {
+	public XDimension2D getPreferredDimension(StringBounder stringBounder, double x, double y) {
 		double w1 = 0;
 		double h = 0;
 		for (ElementTreeEntry entry : entries) {
-			final Dimension2D dim1 = entry.getPreferredDimensionFirstCell(stringBounder);
+			final XDimension2D dim1 = entry.getPreferredDimensionFirstCell(stringBounder);
 			w1 = Math.max(w1, dim1.getWidth());
 			h += dim1.getHeight();
 		}
@@ -93,7 +91,7 @@ public class ElementTree extends AbstractElement {
 		if (w2 > 0) {
 			w2 += margin;
 		}
-		return new Dimension2DDouble(w1 + w2 + 2, h);
+		return new XDimension2D(w1 + w2 + 2, h);
 	}
 
 	private ListWidth getWidthOther(StringBounder stringBounder) {
@@ -108,16 +106,17 @@ public class ElementTree extends AbstractElement {
 	private double getWidth1(StringBounder stringBounder) {
 		double w1 = 0;
 		for (ElementTreeEntry entry : entries) {
-			final Dimension2D dim1 = entry.getPreferredDimensionFirstCell(stringBounder);
+			final XDimension2D dim1 = entry.getPreferredDimensionFirstCell(stringBounder);
 			w1 = Math.max(w1, dim1.getWidth());
 		}
 		return w1;
 	}
 
-	public void drawU(UGraphic ug, int zIndex, Dimension2D dimToUse) {
-		if (zIndex != 0) {
+	public void drawU(UGraphic ug, int zIndex, XDimension2D dimToUse) {
+		if (zIndex != 0)
 			return;
-		}
+
+		ug = ug.apply(getBlack());
 
 		final StringBounder stringBounder = ug.getStringBounder();
 		final double w1 = getWidth1(stringBounder);
@@ -144,7 +143,7 @@ public class ElementTree extends AbstractElement {
 			yvar += h;
 			rows.add(yvar);
 		}
-		ug = ug.apply(HColorSet.instance().getColorOrWhite(getThemeStyle(), "#888888"));
+		ug = ug.apply(getColor88());
 		skeleton.draw(ug, 0, 0);
 		if (strategy != TableStrategy.DRAW_NONE) {
 			final Grid2 grid = new Grid2(rows, cols, strategy);

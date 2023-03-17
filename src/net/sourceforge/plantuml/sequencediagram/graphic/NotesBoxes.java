@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -38,10 +38,10 @@ package net.sourceforge.plantuml.sequencediagram.graphic;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sourceforge.plantuml.graphic.StringBounder;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
 import net.sourceforge.plantuml.sequencediagram.InGroupable;
 import net.sourceforge.plantuml.skin.Context2D;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
 
 final class NotesBoxes extends GraphicalElement implements InGroupable {
 
@@ -56,11 +56,11 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 	public void add(NoteBox noteBox, ParticipantBox participantBox1, ParticipantBox participantBox2) {
 		notes.add(noteBox);
 		participants1.add(participantBox1);
-		if (participantBox2 == null) {
+		if (participantBox2 == null)
 			participants2.add(participantBox1);
-		} else {
+		else
 			participants2.add(participantBox2);
-		}
+
 	}
 
 	public void ensureConstraints(StringBounder stringBounder, ConstraintSet constraintSet) {
@@ -79,7 +79,9 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 				final NoteBox noteBox2 = notes.get(j);
 				final ParticipantBox otherParticipantBox1 = participants1.get(j);
 				final double width2 = noteBox2.getPreferredWidth(stringBounder);
-				constraintSet.getConstraint(participantBox2, otherParticipantBox1).ensureValue((width + width2) / 2);
+				if (participantBox2 != otherParticipantBox1)
+					constraintSet.getConstraint(participantBox2, otherParticipantBox1)
+							.ensureValue((width + width2) / 2);
 			}
 		}
 	}
@@ -88,9 +90,9 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 		double result = Double.MAX_VALUE;
 		for (NoteBox n : notes) {
 			final double m = n.getMinX(stringBounder);
-			if (m < result) {
+			if (m < result)
 				result = m;
-			}
+
 		}
 		return result;
 	}
@@ -99,9 +101,9 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 		double result = -Double.MAX_VALUE;
 		for (NoteBox n : notes) {
 			final double m = n.getMaxX(stringBounder);
-			if (m > result) {
+			if (m > result)
 				result = m;
-			}
+
 		}
 		return result;
 	}
@@ -112,9 +114,9 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 
 	@Override
 	protected void drawInternalU(UGraphic ug, double maxX, Context2D context) {
-		for (NoteBox n : notes) {
+		for (NoteBox n : notes)
 			n.drawInternalU(ug, maxX, context);
-		}
+
 	}
 
 	@Override
@@ -122,9 +124,9 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 		double result = Double.MAX_VALUE;
 		for (NoteBox n : notes) {
 			final double m = n.getStartingX(stringBounder);
-			if (m < result) {
+			if (m < result)
 				result = m;
-			}
+
 		}
 		return result;
 	}
@@ -140,9 +142,9 @@ final class NotesBoxes extends GraphicalElement implements InGroupable {
 		double result = 0;
 		for (NoteBox n : notes) {
 			final double m = n.getPreferredHeight(stringBounder);
-			if (m > result) {
+			if (m > result)
 				result = m;
-			}
+
 		}
 		return result;
 	}

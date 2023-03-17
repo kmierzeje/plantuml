@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,7 +35,6 @@
  */
 package net.sourceforge.plantuml.activitydiagram3.ftile;
 
-import java.awt.geom.Dimension2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,14 +45,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.activitydiagram3.LinkRendering;
-import net.sourceforge.plantuml.graphic.AbstractTextBlock;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
+import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.style.Style;
 
 public class FtileAssemblySimple extends AbstractTextBlock implements Ftile {
 
@@ -90,20 +91,20 @@ public class FtileAssemblySimple extends AbstractTextBlock implements Ftile {
 	}
 
 	private UTranslate getTranslateForSlow(Ftile child, StringBounder stringBounder) {
-		if (child == tile1) {
+		if (child == tile1)
 			return getTranslated1(stringBounder);
-		}
-		if (child == tile2) {
+
+		if (child == tile2)
 			return getTranslated2(stringBounder);
-		}
+
 		UTranslate tmp = tile1.getTranslateFor(child, stringBounder);
-		if (tmp != null) {
+		if (tmp != null)
 			return tmp.compose(getTranslated1(stringBounder));
-		}
+
 		tmp = tile2.getTranslateFor(child, stringBounder);
-		if (tmp != null) {
+		if (tmp != null)
 			return tmp.compose(getTranslated2(stringBounder));
-		}
+
 		throw new UnsupportedOperationException();
 	}
 
@@ -137,7 +138,7 @@ public class FtileAssemblySimple extends AbstractTextBlock implements Ftile {
 	}
 
 	private UTranslate getTranslated2(StringBounder stringBounder) {
-		final Dimension2D dim1 = tile1.calculateDimension(stringBounder);
+		final XDimension2D dim1 = tile1.calculateDimension(stringBounder);
 		final double left = calculateDimension(stringBounder).getLeft();
 		return new UTranslate(left - tile2.calculateDimension(stringBounder).getLeft(), dim1.getHeight());
 	}
@@ -146,6 +147,7 @@ public class FtileAssemblySimple extends AbstractTextBlock implements Ftile {
 		return Collections.emptyList();
 	}
 
+	@Override
 	public Set<Swimlane> getSwimlanes() {
 		final Set<Swimlane> result = new HashSet<>();
 		result.addAll(tile1.getSwimlanes());
@@ -153,14 +155,17 @@ public class FtileAssemblySimple extends AbstractTextBlock implements Ftile {
 		return Collections.unmodifiableSet(result);
 	}
 
+	@Override
 	public ISkinParam skinParam() {
 		return tile1.skinParam();
 	}
 
-	public UStroke getThickness() {
-		return tile1.getThickness();
+	@Override
+	public UStroke getThickness(Style style) {
+		return tile1.getThickness(style);
 	}
 
+	@Override
 	public List<WeldingPoint> getWeldingPoints() {
 		final List<WeldingPoint> result = new ArrayList<>(tile1.getWeldingPoints());
 		result.addAll(tile2.getWeldingPoints());
@@ -171,6 +176,7 @@ public class FtileAssemblySimple extends AbstractTextBlock implements Ftile {
 		return Arrays.asList(tile1, tile2);
 	}
 
+	@Override
 	public HorizontalAlignment arrowHorizontalAlignment() {
 		return tile1.arrowHorizontalAlignment();
 	}

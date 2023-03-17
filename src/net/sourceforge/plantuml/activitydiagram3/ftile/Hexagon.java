@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,12 +35,11 @@
  */
 package net.sourceforge.plantuml.activitydiagram3.ftile;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.creole.Stencil;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.ugraphic.UPolygon;
+import net.sourceforge.plantuml.klimt.creole.Stencil;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.UPolygon;
 
 public class Hexagon {
 
@@ -94,18 +93,18 @@ public class Hexagon {
 			}
 
 			public double getStartingX(StringBounder stringBounder, double y) {
-				final Dimension2D dim = tb.calculateDimension(stringBounder);
+				final XDimension2D dim = tb.calculateDimension(stringBounder);
 				return -getDeltaX(dim.getHeight(), y);
 			}
 
 			public double getEndingX(StringBounder stringBounder, double y) {
-				final Dimension2D dim = tb.calculateDimension(stringBounder);
+				final XDimension2D dim = tb.calculateDimension(stringBounder);
 				return dim.getWidth() + getDeltaX(dim.getHeight(), y);
 			}
 		};
 	}
 
-	public static UPolygon asPolygonSquare(boolean shadowing, double width, double height) {
+	public static UPolygon asPolygonSquare(double shadowing, double width, double height) {
 		final UPolygon diams = new UPolygon();
 
 		diams.addPoint(width / 2, 0);
@@ -113,9 +112,7 @@ public class Hexagon {
 		diams.addPoint(width / 2, height);
 		diams.addPoint(0, height / 2);
 
-		if (shadowing) {
-			diams.setDeltaShadow(3);
-		}
+		diams.setDeltaShadow(shadowing);
 
 		return diams;
 	}

@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,60 +35,77 @@
  */
 package net.sourceforge.plantuml.svek.image;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.SkinParamUtils;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.cucadiagram.ILeaf;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
+import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.FontParam;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.UEllipse;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.style.PName;
+import net.sourceforge.plantuml.style.SName;
+import net.sourceforge.plantuml.style.Style;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.svek.AbstractEntityImage;
 import net.sourceforge.plantuml.svek.ShapeType;
-import net.sourceforge.plantuml.ugraphic.UEllipse;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
 
 public class EntityImagePseudoState extends AbstractEntityImage {
 
 	private static final int SIZE = 22;
 	private final TextBlock desc;
+	private final SName sname;
 
-	public EntityImagePseudoState(ILeaf entity, ISkinParam skinParam) {
-		this(entity, skinParam, "H");
+	public EntityImagePseudoState(Entity entity, ISkinParam skinParam, SName sname) {
+		this(entity, skinParam, "H", sname);
 	}
 
-	public EntityImagePseudoState(ILeaf entity, ISkinParam skinParam, String historyText) {
+	private Style getStyle() {
+		return getStyleSignature().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
+	}
+
+	private StyleSignatureBasic getStyleSignature() {
+		return StyleSignatureBasic.of(SName.root, SName.element, sname, SName.diamond);
+	}
+
+	public EntityImagePseudoState(Entity entity, ISkinParam skinParam, String historyText, SName sname) {
 		super(entity, skinParam);
+		this.sname = sname;
 		final Stereotype stereotype = entity.getStereotype();
-		this.desc = Display.create(historyText).create(
-				new FontConfiguration(getSkinParam(), FontParam.STATE, stereotype), HorizontalAlignment.CENTER,
-				skinParam);
+
+		final FontConfiguration fontConfiguration = FontConfiguration.create(getSkinParam(), FontParam.STATE,
+				stereotype);
+
+		this.desc = Display.create(historyText).create(fontConfiguration, HorizontalAlignment.CENTER, skinParam);
 	}
 
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
-		return new Dimension2DDouble(SIZE, SIZE);
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
+		return new XDimension2D(SIZE, SIZE);
 	}
 
 	final public void drawU(UGraphic ug) {
-		final UEllipse circle = new UEllipse(SIZE, SIZE);
-		if (getSkinParam().shadowing(getEntity().getStereotype())) {
-			circle.setDeltaShadow(4);
-		}
-		ug = ug.apply(new UStroke(1.5));
-		ug = ug.apply(SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.stateBackground).bg())
-				.apply(SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.stateBorder));
-		ug.draw(circle);
-		ug = ug.apply(new UStroke());
+		final UEllipse circle = UEllipse.build(SIZE, SIZE);
 
-		final Dimension2D dimDesc = desc.calculateDimension(ug.getStringBounder());
+		final Style style = getStyle();
+		final HColor borderColor = style.value(PName.LineColor).asColor(getSkinParam().getIHtmlColorSet());
+		final HColor backgroundColor = style.value(PName.BackGroundColor).asColor(getSkinParam().getIHtmlColorSet());
+		final double shadow = style.value(PName.Shadowing).asDouble();
+		final UStroke stroke = style.getStroke();
+
+		circle.setDeltaShadow(shadow);
+		ug = ug.apply(stroke);
+		ug = ug.apply(backgroundColor.bg()).apply(borderColor);
+		ug.draw(circle);
+		// ug = ug.apply(UStroke.simple());
+
+		final XDimension2D dimDesc = desc.calculateDimension(ug.getStringBounder());
 		final double widthDesc = dimDesc.getWidth();
 		final double heightDesc = dimDesc.getHeight();
 

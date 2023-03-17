@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,13 +35,13 @@
  */
 package net.sourceforge.plantuml.anim;
 
-import java.awt.geom.Dimension2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import net.sourceforge.plantuml.ugraphic.MinMax;
+import net.sourceforge.plantuml.klimt.geom.MinMax;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
 
 public class Animation {
 
@@ -76,7 +76,7 @@ public class Animation {
 		return Collections.unmodifiableCollection(all);
 	}
 
-	public void setDimension(Dimension2D dim) {
+	public void setDimension(XDimension2D dim) {
 		for (AffineTransformation affineTransform : all) {
 			affineTransform.setDimension(dim);
 		}
@@ -87,7 +87,7 @@ public class Animation {
 		return all.get(0);
 	}
 
-	public MinMax getMinMax(Dimension2D dim) {
+	public MinMax getMinMax(XDimension2D dim) {
 		MinMax result = MinMax.getEmpty(false);
 		for (AffineTransformation affineTransform : all) {
 			final MinMax m = affineTransform.getMinMax(dim);

@@ -2,15 +2,15 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
- * 
+ * Project Info:  https://plantuml.com
+ *
  * If you like this project or if you find it useful, you can support us at:
- * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
- * 
+ *
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
+ *
  * This file is part of PlantUML.
  *
  * PlantUML is free software; you can redistribute it and/or modify it
@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.bpm.ConnectorPuzzle.Where;
+import net.sourceforge.plantuml.style.ISkinParam;
 
 public class Grid {
 
@@ -295,7 +295,8 @@ public class Grid {
 	// public void mergeLines(Line line1, Line line2) {
 	// final Map<Coord, Cell> supp = new HashMap<Coord, Cell>();
 	//
-	// for (Iterator<Map.Entry<Coord, Cell>> it = cells.entrySet().iterator(); it.hasNext();) {
+	// for (Iterator<Map.Entry<Coord, Cell>> it = cells.entrySet().iterator();
+	// it.hasNext();) {
 	// final Map.Entry<Coord, Cell> ent = it.next();
 	// final Cell cell = ent.getValue();
 	// if (cell == null || cell.getData() == null) {
@@ -311,14 +312,15 @@ public class Grid {
 	// }
 
 	public void addConnections() {
-		for (Map.Entry<Coord, Cell> ent : new HashMap<Coord, Cell>(cells).entrySet()) {
+		for (Map.Entry<Coord, Cell> ent : new HashMap<>(cells).entrySet()) {
 			final List<Placeable> dests2 = ent.getValue().getDestinations2();
 			final Coord src = ent.getKey();
 			for (int i = 0; i < dests2.size(); i++) {
 				final Coord dest = getCoord(dests2.get(i));
 				final boolean startHorizontal = i == 0;
 				if (startHorizontal) {
-					// System.err.println("DrawingHorizontal " + ent.getValue() + " --> " + dests.get(i) + " " + i);
+					// System.err.println("DrawingHorizontal " + ent.getValue() + " --> " +
+					// dests.get(i) + " " + i);
 					drawStartHorizontal(src, dest);
 				} else {
 					drawStartVertical(src, dest);
@@ -345,7 +347,8 @@ public class Grid {
 				addPuzzle(cur, src.getCol(), "NS");
 			}
 		}
-		for (Navigator<Col> itCol = Navigators.iterate(cols, src.getCol(), dest.getCol()); itCol.get() != dest.getCol();) {
+		for (Navigator<Col> itCol = Navigators.iterate(cols, src.getCol(), dest.getCol()); itCol.get() != dest
+				.getCol();) {
 			final Col cur = itCol.next();
 			if (cur != dest.getCol()) {
 				addPuzzle(dest.getLine(), cur, "EW");
@@ -382,7 +385,8 @@ public class Grid {
 		}
 		start.append(compare < 0 ? Where.EAST : Where.WEST);
 
-		for (Navigator<Col> itCol = Navigators.iterate(cols, src.getCol(), dest.getCol()); itCol.get() != dest.getCol();) {
+		for (Navigator<Col> itCol = Navigators.iterate(cols, src.getCol(), dest.getCol()); itCol.get() != dest
+				.getCol();) {
 			final Col cur = itCol.next();
 			if (cur != dest.getCol()) {
 				addPuzzle(src.getLine(), cur, "EW");

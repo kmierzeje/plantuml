@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -49,15 +49,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import net.sourceforge.plantuml.Log;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.eps.EpsGraphics;
-import net.sourceforge.plantuml.ugraphic.UPath;
-import net.sourceforge.plantuml.ugraphic.USegment;
-import net.sourceforge.plantuml.ugraphic.USegmentType;
+import net.sourceforge.plantuml.klimt.UPath;
+import net.sourceforge.plantuml.klimt.color.ColorMapper;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.drawing.eps.EpsGraphics;
+import net.sourceforge.plantuml.klimt.geom.USegment;
+import net.sourceforge.plantuml.klimt.geom.USegmentType;
+import net.sourceforge.plantuml.url.Url;
+import net.sourceforge.plantuml.utils.Log;
 import net.sourceforge.plantuml.version.Version;
 
 public class TikzGraphics {
+    // ::remove folder when __HAXE__
+	// ::remove folder when __CORE__
 
 	// https://www.sharelatex.com/blog/2013/08/27/tikz-series-pt1.html
 	// http://cremeronline.com/LaTeX/minimaltikz.pdf
@@ -65,19 +70,21 @@ public class TikzGraphics {
 	private final List<String> cmd = new ArrayList<>();
 	private final boolean withPreamble;
 
-	private Color color = Color.BLACK;
-	private Color fillcolor = Color.BLACK;
-	private Color fillcolorGradient2 = null;
+	private HColor color = HColors.BLACK;
+	private HColor fillcolor = HColors.BLACK;
+	private HColor fillcolorGradient2 = null;
 	private char gradientPolicy;
 	private double thickness = 1.0;
 	private final double scale;
 	private String dash = null;
+	private final ColorMapper mapper;
 
 	private final Map<Color, String> colornames = new LinkedHashMap<Color, String>();
 
-	public TikzGraphics(double scale, boolean withPreamble) {
+	public TikzGraphics(double scale, boolean withPreamble, ColorMapper mapper) {
 		this.withPreamble = withPreamble;
 		this.scale = scale;
+		this.mapper = mapper;
 	}
 
 	private final Map<String, Integer> styles = new LinkedHashMap<String, Integer>();
@@ -103,15 +110,43 @@ public class TikzGraphics {
 		}
 	}
 
-	private String getColorName(Color c) {
-		if (c.equals(Color.WHITE)) {
+	private String getColorName(HColor hcolor) {
+		final Color color = hcolor.toColor(mapper);
+		if (color.equals(Color.WHITE))
 			return "white";
-		}
-		if (c.equals(Color.BLACK)) {
+
+		if (color.equals(Color.BLACK))
 			return "black";
-		}
-		final String result = colornames.get(c);
+
+		final String result = colornames.get(color);
 		return Objects.requireNonNull(result);
+	}
+
+	private boolean mustApplyFillColor() {
+		if (fillcolor == null)
+			return false;
+
+		if (fillcolor.isTransparent())
+			return false;
+
+		if (fillcolor.toColor(mapper).getAlpha() == 0)
+			return false;
+
+		return true;
+	}
+
+	private void appendFillColor(StringBuilder sb, boolean colorBackup) {
+		if (fillcolor == null)
+			return;
+
+		if (mustApplyFillColor()) {
+			sb.append("fill=" + getColorName(fillcolor) + ",");
+			if (color == null && colorBackup)
+				sb.append("color=" + getColorName(fillcolor) + ",");
+		} else {
+			sb.append("fill opacity=0,");
+		}
+
 	}
 
 	public void createData(OutputStream os) throws IOException {
@@ -158,29 +193,28 @@ public class TikzGraphics {
 			out(os, "    }");
 			out(os, "}");
 		}
-		for (Map.Entry<Color, String> ent : colornames.entrySet()) {
+		for (Map.Entry<Color, String> ent : colornames.entrySet())
 			out(os, definecolor(ent.getValue(), ent.getKey()));
 
-		}
-		if (scale != 1) {
+		if (scale != 1)
 			out(os, "\\scalebox{" + format(scale) + "}{");
-		}
+
 		out(os, "\\begin{tikzpicture}[yscale=-1");
 		purgeStyles();
-		for (String style : styles.keySet()) {
+		for (String style : styles.keySet())
 			out(os, "," + stylesID.get(style) + "/.style={" + style + "}");
-		}
+
 		out(os, "]");
-		for (String s : cmd) {
+		for (String s : cmd)
 			out(os, useStyle(s));
-		}
+
 		out(os, "\\end{tikzpicture}");
-		if (scale != 1) {
+		if (scale != 1)
 			out(os, "}");
-		}
-		if (withPreamble) {
+
+		if (withPreamble)
 			out(os, "\\end{document}");
-		}
+
 	}
 
 	private String useStyle(String s) {
@@ -202,13 +236,15 @@ public class TikzGraphics {
 	private void purgeStyles() {
 		for (Iterator<Map.Entry<String, Integer>> it = styles.entrySet().iterator(); it.hasNext();) {
 			final Map.Entry<String, Integer> ent = it.next();
-			if (ent.getValue().intValue() == 1) {
+			if (ent.getValue().intValue() == 1)
 				it.remove();
-			}
+
 		}
 	}
 
 	private String definecolor(String name, Color color) {
+		if (color.getAlpha() == 0)
+			color = Color.WHITE;
 		return "\\definecolor{" + name + "}{RGB}{" + color.getRed() + "," + color.getGreen() + "," + color.getBlue()
 				+ "}";
 	}
@@ -222,25 +258,26 @@ public class TikzGraphics {
 			sb.append(";");
 		} else {
 			sb.append("\\node at " + couple(x, y) + "[draw, ");
-			if (color != null) {
+			if (color != null)
 				sb.append("color=" + getColorName(color) + ",");
-			}
-			if (fillcolor != null) {
-				sb.append("fill=" + getColorName(fillcolor) + ",");
-				if (color == null) {
+
+			if (mustApplyFillColor()) {
+				appendFillColor(sb, true);
+				// sb.append("fill=" + getColorName(fillcolor) + ",");
+				if (color == null)
 					sb.append("color=" + getColorName(fillcolor) + ",");
-				}
+
 			}
 			sb.append("line width=" + thickness + "pt,");
 			sb.append("below right,");
 			sb.append("inner sep=2ex,");
 			sb.append("minimum width=" + format(width) + "pt,");
 			sb.append("minimum height=" + format(height) + "pt,");
-			if (Url.isLatex(pendingUrl)) {
+			if (Url.isLatex(pendingUrl))
 				sb.append("hyperref node=" + extractInternalHref(pendingUrl));
-			} else {
+			else
 				sb.append("href node=" + pendingUrl);
-			}
+
 			sb.append("] ");
 			sb.append(" {};");
 			urlIgnoreText = true;
@@ -249,18 +286,18 @@ public class TikzGraphics {
 	}
 
 	private String getAngleFromGradientPolicy() {
-		if (this.gradientPolicy == '-') {
+		if (this.gradientPolicy == '-')
 			return "0";
-		}
-		if (this.gradientPolicy == '|') {
+
+		if (this.gradientPolicy == '|')
 			return "90";
-		}
-		if (this.gradientPolicy == '/') {
+
+		if (this.gradientPolicy == '/')
 			return "45";
-		}
-		if (this.gradientPolicy == '\\') {
+
+		if (this.gradientPolicy == '\\')
 			return "135";
-		}
+
 		throw new IllegalArgumentException();
 	}
 
@@ -286,25 +323,25 @@ public class TikzGraphics {
 		}
 		sb.append("]{");
 		if (pendingUrl == null || urlIgnoreText) {
-			if (underline) {
+			if (underline)
 				sb.append("\\underline{");
-			}
-			if (italic) {
+
+			if (italic)
 				sb.append("\\textit{");
-			}
-			if (bold) {
+
+			if (bold)
 				sb.append("\\textbf{");
-			}
+
 			sb.append(protectText(text));
-			if (bold) {
+			if (bold)
 				sb.append("}");
-			}
-			if (italic) {
+
+			if (italic)
 				sb.append("}");
-			}
-			if (underline) {
+
+			if (underline)
 				sb.append("}");
-			}
+
 		} else {
 			appendPendingUrl(sb);
 			sb.append("{");
@@ -368,13 +405,13 @@ public class TikzGraphics {
 	public void line(double x1, double y1, double x2, double y2) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\\draw[");
-		if (color != null) {
+		if (color != null)
 			sb.append("color=" + getColorName(color) + ",");
-		}
+
 		sb.append("line width=" + thickness + "pt");
-		if (dash != null) {
+		if (dash != null)
 			sb.append(",dash pattern=" + dash);
-		}
+
 		sb.append("] ");
 		sb.append(couple(x1, y1));
 		sb.append(" -- ");
@@ -436,11 +473,12 @@ public class TikzGraphics {
 			sb.append("top color=" + getColorName(fillcolor) + ",");
 			sb.append("bottom color=" + getColorName(fillcolorGradient2) + ",");
 			sb.append("shading=axis,shading angle=" + getAngleFromGradientPolicy() + ",");
-		} else if (fillcolor != null) {
-			sb.append("fill=" + getColorName(fillcolor) + ",");
-			if (color == null) {
+		} else if (mustApplyFillColor()) {
+			appendFillColor(sb, false);
+			// sb.append("fill=" + getColorName(fillcolor) + ",");
+			if (color == null)
 				sb.append("color=" + getColorName(fillcolor) + ",");
-			}
+
 		}
 	}
 
@@ -473,18 +511,24 @@ public class TikzGraphics {
 		final StringBuilder sb = new StringBuilder();
 		appendShadeOrDraw(sb);
 		sb.append("line width=" + thickness + "pt");
-		if (dash != null) {
+		if (dash != null)
 			sb.append(",dash pattern=" + dash);
-		}
+
 		sb.append("] ");
+		double lastx = 0;
+		double lasty = 0;
 		for (USegment seg : path) {
 			final USegmentType type = seg.getSegmentType();
 			final double coord[] = seg.getCoord();
 			if (type == USegmentType.SEG_MOVETO) {
 				sb.append(couple(coord[0] + x, coord[1] + y));
+				lastx = coord[0] + x;
+				lasty = coord[1] + y;
 			} else if (type == USegmentType.SEG_LINETO) {
 				sb.append(" -- ");
 				sb.append(couple(coord[0] + x, coord[1] + y));
+				lastx = coord[0] + x;
+				lasty = coord[1] + y;
 			} else if (type == USegmentType.SEG_QUADTO) {
 				throw new UnsupportedOperationException();
 			} else if (type == USegmentType.SEG_CUBICTO) {
@@ -496,10 +540,44 @@ public class TikzGraphics {
 				sb.append(couple(coord[2] + x, coord[3] + y));
 				sb.append(" .. ");
 				sb.append(couple(coord[4] + x, coord[5] + y));
+				lastx = coord[4] + x;
+				lasty = coord[5] + y;
 			} else if (type == USegmentType.SEG_CLOSE) {
 				// Nothing
 			} else if (type == USegmentType.SEG_ARCTO) {
-				// Nothing
+
+				final double newx = coord[5] + x;
+				final double newy = coord[6] + y;
+				final boolean easyCase = coord[2] == 0 && coord[3] == 0 && coord[4] == 1;
+
+				if (easyCase && newx > lastx && newy < lasty) {
+					final int start = 180;
+					final int end = 270;
+					final String radius = format(coord[0]);
+					sb.append(" arc(" + start + ":" + end + ":" + radius + "pt) ");
+				} else if (easyCase && newx > lastx && newy > lasty) {
+					final int start = 270;
+					final int end = 360;
+					final String radius = format(coord[0]);
+					sb.append(" arc(" + start + ":" + end + ":" + radius + "pt) ");
+				} else if (easyCase && newx < lastx && newy > lasty) {
+					final int start = 0;
+					final int end = 90;
+					final String radius = format(coord[0]);
+					sb.append(" arc(" + start + ":" + end + ":" + radius + "pt) ");
+				} else if (easyCase && newx < lastx && newy < lasty) {
+					final int start = 90;
+					final int end = 180;
+					final String radius = format(coord[0]);
+					sb.append(" arc(" + start + ":" + end + ":" + radius + "pt) ");
+				} else {
+					sb.append(" -- ");
+					sb.append(couple(coord[5] + x, coord[6] + y));
+				}
+
+				lastx = newx;
+				lasty = newy;
+
 			} else {
 				Log.println("unknown4 " + seg);
 			}
@@ -511,12 +589,12 @@ public class TikzGraphics {
 	public void ellipse(double x, double y, double width, double height) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\\draw[");
-		if (color != null) {
+		if (color != null)
 			sb.append("color=" + getColorName(color) + ",");
-		}
-		if (fillcolor != null) {
+
+		if (mustApplyFillColor())
 			sb.append("fill=" + getColorName(fillcolor) + ",");
-		}
+
 		sb.append("line width=" + thickness + "pt] " + couple(x, y) + " ellipse (" + format(width) + "pt and "
 				+ format(height) + "pt);");
 		addCommand(sb);
@@ -525,12 +603,12 @@ public class TikzGraphics {
 	public void arc(double x, double y, int angleStart, int angleEnd, double radius) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\\draw[");
-		if (color != null) {
+		if (color != null)
 			sb.append("color=" + getColorName(color) + ",");
-		}
-		if (fillcolor != null) {
+
+		if (mustApplyFillColor())
 			sb.append("fill=" + getColorName(fillcolor) + ",");
-		}
+
 		sb.append("line width=" + thickness + "pt] " + couple(x, y) + " arc (" + angleStart + ":" + angleEnd + ":"
 				+ format(radius) + "pt);");
 		addCommand(sb);
@@ -583,38 +661,42 @@ public class TikzGraphics {
 
 	}
 
-	public void setFillColor(Color c) {
-		// if (c == null) {
-		// c = Color.WHITE;
-		// }
+	public void setFillColor(HColor c) {
 		this.fillcolor = c;
 		this.fillcolorGradient2 = null;
-		addColor(c);
+		if (mustApplyFillColor())
+			addColor(fillcolor);
+
 	}
 
-	public void setGradientColor(Color c1, Color c2, char policy) {
+	public void setGradientColor(HColor c1, HColor c2, char policy) {
 		this.fillcolor = c1;
 		this.fillcolorGradient2 = c2;
 		this.gradientPolicy = policy;
-		addColor(c1);
-		addColor(c2);
+		if (mustApplyFillColor())
+			addColor(fillcolor);
+
+		addColor(fillcolorGradient2);
 	}
 
-	public void setStrokeColor(Color c) {
+	public void setStrokeColor(HColor c) {
 		// Objects.requireNonNull(c);
 		this.color = c;
 		addColor(c);
 	}
 
-	private void addColor(Color c) {
-		if (c == null) {
+	private void addColor(HColor hcolor) {
+		if (hcolor == null)
 			return;
-		}
-		if (colornames.containsKey(c)) {
+		final Color color = hcolor.toColor(mapper);
+		if (color == null)
 			return;
-		}
+
+		if (colornames.containsKey(color))
+			return;
+
 		final String name = "plantucolor" + String.format("%04d", colornames.size());
-		colornames.put(c, name);
+		colornames.put(color, name);
 	}
 
 	public void setStrokeWidth(double thickness, String dash) {

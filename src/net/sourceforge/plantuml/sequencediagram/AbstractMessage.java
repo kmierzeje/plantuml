@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -41,28 +41,37 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.cucadiagram.Display;
+import net.sourceforge.plantuml.klimt.creole.Display;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
+import net.sourceforge.plantuml.stereo.Stereotype;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleBuilder;
 import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.style.WithStyle;
+import net.sourceforge.plantuml.url.Url;
 
-public abstract class AbstractMessage implements EventWithDeactivate, WithStyle {
+public abstract class AbstractMessage extends AbstractEvent implements EventWithDeactivate, WithStyle {
 
-	public Style[] getUsedStyles() {
-		Style style = getDefaultStyleDefinition().getMergedStyle(styleBuilder);
-		if (style != null && arrowConfiguration.getColor() != null) {
+	private Stereotype stereotype;
+
+	public void getStereotype(Stereotype stereotype) {
+		this.stereotype = stereotype;
+	}
+
+	final public Style[] getUsedStyles() {
+		Style style = getStyleSignature().getMergedStyle(styleBuilder);
+		if (style != null && arrowConfiguration.getColor() != null)
 			style = style.eventuallyOverride(PName.LineColor, arrowConfiguration.getColor());
-		}
+
 		return new Style[] { style };
 	}
 
-	public StyleSignature getDefaultStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.sequenceDiagram, SName.arrow);
+	public StyleSignature getStyleSignature() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.sequenceDiagram, SName.arrow)
+				.withTOBECHANGED(stereotype);
 	}
 
 	private final Display label;
@@ -103,25 +112,22 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 	}
 
 	final public Url getUrl() {
-		if (url == null) {
-			for (Note n : noteOnMessages) {
-				if (n.getUrl() != null) {
+		if (url == null)
+			for (Note n : noteOnMessages)
+				if (n.getUrl() != null)
 					return n.getUrl();
-				}
-			}
-		}
+
 		return url;
 	}
 
 	public boolean hasUrl() {
-		for (Note n : noteOnMessages) {
-			if (n.hasUrl()) {
+		for (Note n : noteOnMessages)
+			if (n.hasUrl())
 				return true;
-			}
-		}
-		if (label != null && label.hasUrl()) {
+
+		if (label != null && label.hasUrl())
 			return true;
-		}
+
 		return getUrl() != null;
 	}
 
@@ -131,18 +137,15 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 	public final boolean addLifeEvent(LifeEvent lifeEvent) {
 		lifeEvent.setMessage(this);
 		lifeEventsType.add(lifeEvent.getType());
-		if (lifeEventsType.size() == 1 && isActivate()) {
+		if (lifeEventsType.size() == 1 && isActivate())
 			firstIsActivate = true;
-		}
 
 		if (lifeEvent.getType() == LifeEventType.ACTIVATE
-				&& noActivationAuthorized2.contains(lifeEvent.getParticipant())) {
+				&& noActivationAuthorized2.contains(lifeEvent.getParticipant()))
 			return false;
-		}
 
-		if (lifeEvent.getType() == LifeEventType.DEACTIVATE || lifeEvent.getType() == LifeEventType.DESTROY) {
+		if (lifeEvent.getType() == LifeEventType.DEACTIVATE || lifeEvent.getType() == LifeEventType.DESTROY)
 			noActivationAuthorized2.add(lifeEvent.getParticipant());
-		}
 
 		return true;
 	}
@@ -151,10 +154,12 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 		return lifeEventsType.contains(LifeEventType.CREATE);
 	}
 
+	@Deprecated
 	public boolean isActivate() {
 		return lifeEventsType.contains(LifeEventType.ACTIVATE);
 	}
 
+	@Deprecated
 	public boolean isDeactivate() {
 		return lifeEventsType.contains(LifeEventType.DEACTIVATE);
 	}
@@ -163,6 +168,7 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 		return lifeEventsType.contains(LifeEventType.DESTROY);
 	}
 
+	@Deprecated
 	private boolean isDeactivateOrDestroy() {
 		return isDeactivate() || isDestroy();
 	}
@@ -176,9 +182,9 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 	}
 
 	public final Display getLabelNumbered() {
-		if (getMessageNumber() == null) {
+		if (getMessageNumber() == null)
 			return getLabel();
-		}
+
 		Display result = Display.empty();
 		result = result.add(new MessageNumber(getMessageNumber()));
 		result = result.addAll(getLabel());
@@ -195,9 +201,9 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 
 	public final void setNote(Note note) {
 		if (note.getPosition() != NotePosition.LEFT && note.getPosition() != NotePosition.RIGHT
-				&& note.getPosition() != NotePosition.BOTTOM && note.getPosition() != NotePosition.TOP) {
+				&& note.getPosition() != NotePosition.BOTTOM && note.getPosition() != NotePosition.TOP)
 			throw new IllegalArgumentException();
-		}
+
 		note = note.withPosition(overrideNotePosition(note.getPosition()));
 		this.noteOnMessages.add(note);
 	}
@@ -239,9 +245,9 @@ public abstract class AbstractMessage implements EventWithDeactivate, WithStyle 
 
 	public void setAnchor(String anchor) {
 		this.anchor = anchor;
-		if (anchor != null && anchor.startsWith("{")) {
+		if (anchor != null && anchor.startsWith("{"))
 			throw new IllegalArgumentException(anchor);
-		}
+
 	}
 
 	public void setPart1Anchor(String anchor) {

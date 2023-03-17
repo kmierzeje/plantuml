@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -34,16 +34,25 @@
  */
 package net.sourceforge.plantuml.timingdiagram;
 
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.command.Position;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.UDrawable;
-import net.sourceforge.plantuml.graphic.color.Colors;
+import net.sourceforge.plantuml.klimt.Fashion;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.UDrawable;
+import net.sourceforge.plantuml.skin.ArrowConfiguration;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.style.PName;
+import net.sourceforge.plantuml.style.SName;
+import net.sourceforge.plantuml.style.Style;
+import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
+import net.sourceforge.plantuml.utils.Position;
 
 public abstract class Player implements TimeProjected {
 
@@ -52,8 +61,10 @@ public abstract class Player implements TimeProjected {
 	private final boolean compact;
 	private final Display title;
 	protected int suggestedHeight;
+	protected final Stereotype stereotype;
 
-	public Player(String title, ISkinParam skinParam, TimingRuler ruler, boolean compact) {
+	public Player(String title, ISkinParam skinParam, TimingRuler ruler, boolean compact, Stereotype stereotype) {
+		this.stereotype = stereotype;
 		this.skinParam = skinParam;
 		this.compact = compact;
 		this.ruler = ruler;
@@ -64,8 +75,29 @@ public abstract class Player implements TimeProjected {
 		return compact;
 	}
 
+	protected abstract StyleSignature getStyleSignature();
+
+	final protected Style getStyle() {
+		return getStyleSignature().getMergedStyle(skinParam.getCurrentStyleBuilder());
+	}
+
 	final protected FontConfiguration getFontConfiguration() {
-		return new FontConfiguration(skinParam, FontParam.TIMING, null);
+		return FontConfiguration.create(skinParam, StyleSignatureBasic
+				.of(SName.root, SName.element, SName.timingDiagram).getMergedStyle(skinParam.getCurrentStyleBuilder()));
+	}
+
+	final protected UStroke getStroke() {
+		final Style style = getStyleSignature().getMergedStyle(skinParam.getCurrentStyleBuilder());
+		return style.getStroke();
+	}
+
+	final protected Fashion getContext() {
+
+		final Style style = getStyleSignature().getMergedStyle(skinParam.getCurrentStyleBuilder());
+		final HColor lineColor = style.value(PName.LineColor).asColor(skinParam.getIHtmlColorSet());
+		final HColor backgroundColor = style.value(PName.BackGroundColor).asColor(skinParam.getIHtmlColorSet());
+
+		return new Fashion(backgroundColor, lineColor).withStroke(getStroke());
 	}
 
 	final protected TextBlock getTitle() {
@@ -78,7 +110,7 @@ public abstract class Player implements TimeProjected {
 
 	public abstract void setState(TimeTick now, String comment, Colors color, String... states);
 
-	public abstract void createConstraint(TimeTick tick1, TimeTick tick2, String message);
+	public abstract void createConstraint(TimeTick tick1, TimeTick tick2, String message, ArrowConfiguration config);
 
 	public abstract TextBlock getPart1(double fullAvailableWidth, double specialVSpace);
 

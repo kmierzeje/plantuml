@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -36,16 +36,17 @@
 package net.sourceforge.plantuml.math;
 
 import java.awt.Color;
-import java.awt.geom.Dimension2D;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.script.ScriptException;
 
-import net.sourceforge.plantuml.ugraphic.MutableImage;
-import net.sourceforge.plantuml.ugraphic.UImageSvg;
+import net.sourceforge.plantuml.klimt.MutableImage;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.UImageSvg;
 
 public class AsciiMath implements ScientificEquation {
+	// ::remove folder when __CORE__
 
 	private final LatexBuilder builder;
 	private final String tex;
@@ -55,7 +56,7 @@ public class AsciiMath implements ScientificEquation {
 		this.builder = new LatexBuilder(tex);
 	}
 
-	public Dimension2D getDimension() {
+	public XDimension2D getDimension() {
 		return builder.getDimension();
 	}
 

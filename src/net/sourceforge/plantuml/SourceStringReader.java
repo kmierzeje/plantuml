@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -36,7 +36,7 @@
 package net.sourceforge.plantuml;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static net.sourceforge.plantuml.ugraphic.ImageBuilder.plainImageBuilder;
+import static net.atmp.ImageBuilder.plainImageBuilder;
 import static net.sourceforge.plantuml.utils.CharsetUtils.charsetOrDefault;
 
 import java.io.IOException;
@@ -50,12 +50,14 @@ import java.util.List;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.core.DiagramDescription;
 import net.sourceforge.plantuml.core.ImageData;
-import net.sourceforge.plantuml.graphic.GraphicStrings;
+import net.sourceforge.plantuml.klimt.shape.GraphicStrings;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
 import net.sourceforge.plantuml.preproc.Defines;
 import net.sourceforge.plantuml.security.SFile;
-import net.sourceforge.plantuml.svek.TextBlockBackcolored;
+import net.sourceforge.plantuml.utils.Log;
 
 public class SourceStringReader {
+	// ::remove file when __HAXE__
 
 	final private List<BlockUml> blocks;
 
@@ -87,14 +89,13 @@ public class SourceStringReader {
 		this(defines, source, charset, config, FileSystem.getInstance().getCurrentDir());
 	}
 
-	public SourceStringReader(Defines defines, String source, String charset, List<String> config, SFile newCurrentDir) {
+	public SourceStringReader(Defines defines, String source, String charset, List<String> config,
+			SFile newCurrentDir) {
 		this(defines, source, charsetOrDefault(charset), config, newCurrentDir);
 	}
-	
+
 	public SourceStringReader(Defines defines, String source, Charset charset, List<String> config,
 			SFile newCurrentDir) {
-		// // WARNING GLOBAL LOCK HERE
-		// synchronized (SourceStringReader.class) {
 		try {
 			final BlockUmlBuilder builder = new BlockUmlBuilder(config, charset, defines, new StringReader(source),
 					newCurrentDir, "string");
@@ -103,7 +104,6 @@ public class SourceStringReader {
 			Log.error("error " + e);
 			throw new IllegalStateException(e);
 		}
-		// }
 	}
 
 	@Deprecated
@@ -115,6 +115,7 @@ public class SourceStringReader {
 		return outputImage(os, 0);
 	}
 
+	// ::comment when __CORE__
 	@Deprecated
 	public String generateImage(SFile f) throws IOException {
 		return outputImage(f).getDescription();
@@ -125,6 +126,7 @@ public class SourceStringReader {
 			return outputImage(os, 0);
 		}
 	}
+	// ::done
 
 	@Deprecated
 	public String generateImage(OutputStream os, FileFormatOption fileFormatOption) throws IOException {
@@ -175,9 +177,9 @@ public class SourceStringReader {
 	}
 
 	public DiagramDescription generateDiagramDescription(int numImage, FileFormatOption fileFormatOption) {
-		if (blocks.size() == 0) {
+		if (blocks.size() == 0)
 			return null;
-		}
+
 		for (BlockUml b : blocks) {
 			final Diagram system = b.getDiagram();
 			final int nbInSystem = system.getNbImages();
@@ -209,17 +211,17 @@ public class SourceStringReader {
 	}
 
 	public String getCMapData(int numImage, FileFormatOption fileFormatOption) throws IOException {
-		if (blocks.size() == 0) {
+		if (blocks.size() == 0)
 			return null;
-		}
+
 		for (BlockUml b : blocks) {
 			final Diagram system = b.getDiagram();
 			final int nbInSystem = system.getNbImages();
 			if (numImage < nbInSystem) {
 				final ImageData imageData = system.exportDiagram(new NullOutputStream(), numImage, fileFormatOption);
-				if (imageData.containsCMapData()) {
+				if (imageData.containsCMapData())
 					return imageData.getCMapData("plantuml");
-				}
+
 				return null;
 			}
 			numImage -= nbInSystem;
@@ -229,11 +231,10 @@ public class SourceStringReader {
 	}
 
 	public ImageData noStartumlFound(OutputStream os, FileFormatOption fileFormatOption) throws IOException {
-		final TextBlockBackcolored error = GraphicStrings.createForError(Arrays.asList("No @startuml/@enduml found"),
+		final TextBlock error = GraphicStrings.createForError(Arrays.asList("No @startuml/@enduml found"),
 				fileFormatOption.isUseRedForError());
 
-		return plainImageBuilder(error, fileFormatOption)
-				.write(os);
+		return plainImageBuilder(error, fileFormatOption).write(os);
 	}
 
 	public final List<BlockUml> getBlocks() {

@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.activitydiagram3.ftile.BoxStyle;
 import net.sourceforge.plantuml.activitydiagram3.ftile.Ftile;
 import net.sourceforge.plantuml.activitydiagram3.ftile.FtileFactory;
@@ -51,12 +50,14 @@ import net.sourceforge.plantuml.activitydiagram3.gtile.Gtile;
 import net.sourceforge.plantuml.activitydiagram3.gtile.GtileBox;
 import net.sourceforge.plantuml.activitydiagram3.gtile.GtileRepeat;
 import net.sourceforge.plantuml.command.CommandExecutionResult;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.color.Colors;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.VerticalAlignment;
 import net.sourceforge.plantuml.sequencediagram.NotePosition;
 import net.sourceforge.plantuml.sequencediagram.NoteType;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.style.ISkinParam;
 
 public class InstructionRepeat extends AbstractInstruction implements Instruction {
 
@@ -66,6 +67,7 @@ public class InstructionRepeat extends AbstractInstruction implements Instructio
 	private final Swimlane swimlane;
 	private final Swimlanes swimlanes;
 	private Swimlane swimlaneOut;
+	private Swimlane swimlaneBackward;
 	private BoxStyle boxStyle;
 	private boolean killed = false;
 	private final BoxStyle boxStyleIn;
@@ -107,10 +109,10 @@ public class InstructionRepeat extends AbstractInstruction implements Instructio
 		return false;
 	}
 
-	public void setBackward(Display label, Swimlane swimlaneOut, BoxStyle boxStyle, LinkRendering incoming1,
+	public void setBackward(Display label, Swimlane swimlaneBackward, BoxStyle boxStyle, LinkRendering incoming1,
 			LinkRendering incoming2) {
 		this.backward = label;
-		this.swimlaneOut = swimlaneOut;
+		this.swimlaneBackward = swimlaneBackward;
 		this.boxStyle = boxStyle;
 		this.incoming1 = incoming1;
 		this.incoming2 = incoming2;
@@ -125,6 +127,7 @@ public class InstructionRepeat extends AbstractInstruction implements Instructio
 		return repeatList.add(ins);
 	}
 
+	// ::comment when __CORE__
 	@Override
 	public Gtile createGtile(ISkinParam skinParam, StringBounder stringBounder) {
 
@@ -144,6 +147,7 @@ public class InstructionRepeat extends AbstractInstruction implements Instructio
 //		}
 		return result;
 	}
+	// ::done
 
 	public Ftile createFtile(FtileFactory factory) {
 		final Ftile back = getFtileBackward(factory);
@@ -162,9 +166,9 @@ public class InstructionRepeat extends AbstractInstruction implements Instructio
 		if (Display.isNull(backward))
 			return null;
 
-		Ftile result = factory.activity(backward, swimlaneOut, boxStyle, Colors.empty(), null);
+		Ftile result = factory.activity(backward, swimlaneBackward, boxStyle, Colors.empty(), null);
 		if (backwardNotes.size() > 0)
-			result = factory.addNote(result, swimlaneOut, backwardNotes);
+			result = factory.addNote(result, swimlaneBackward, backwardNotes, VerticalAlignment.CENTER);
 
 		return result;
 	}
@@ -203,7 +207,7 @@ public class InstructionRepeat extends AbstractInstruction implements Instructio
 		if (Display.isNull(backward))
 			return repeatList.addNote(note, position, type, colors, swimlaneNote);
 
-		this.backwardNotes.add(new PositionedNote(note, position, type, colors, swimlaneNote));
+		this.backwardNotes.add(new PositionedNote(note, position, type, swimlaneNote, colors));
 		return true;
 
 	}

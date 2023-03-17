@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,17 +35,18 @@
  */
 package net.sourceforge.plantuml.compositediagram;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import net.sourceforge.plantuml.ISkinSimple;
 import net.sourceforge.plantuml.command.Command;
+import net.sourceforge.plantuml.command.CommonCommands;
 import net.sourceforge.plantuml.command.PSystemCommandFactory;
 import net.sourceforge.plantuml.compositediagram.command.CommandCreateBlock;
 import net.sourceforge.plantuml.compositediagram.command.CommandCreatePackageBlock;
 import net.sourceforge.plantuml.compositediagram.command.CommandEndPackageBlock;
 import net.sourceforge.plantuml.compositediagram.command.CommandLinkBlock;
 import net.sourceforge.plantuml.core.UmlSource;
+import net.sourceforge.plantuml.style.ISkinSimple;
 
 public class CompositeDiagramFactory extends PSystemCommandFactory {
 
@@ -56,19 +57,16 @@ public class CompositeDiagramFactory extends PSystemCommandFactory {
 	}
 
 	@Override
-	protected List<Command> createCommands() {
-		final List<Command> cmds = new ArrayList<>();
+	protected void initCommandsList(List<Command> cmds) {
 		cmds.add(new CommandCreateBlock());
 		cmds.add(new CommandLinkBlock());
 		cmds.add(new CommandCreatePackageBlock());
 		cmds.add(new CommandEndPackageBlock());
-		addCommonCommands1(cmds);
-
-		return cmds;
+		CommonCommands.addCommonCommands1(cmds);
 	}
 
 	@Override
-	public CompositeDiagram createEmptyDiagram(UmlSource source, ISkinSimple skinParam) {
+	public CompositeDiagram createEmptyDiagram(UmlSource source, Map<String, String> skinParam) {
 		return new CompositeDiagram(source, skinParam);
 	}
 }

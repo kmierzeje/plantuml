@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -38,15 +38,14 @@ package net.sourceforge.plantuml.activitydiagram3.gtile;
 import java.util.Arrays;
 import java.util.List;
 
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.UseStyle;
 import net.sourceforge.plantuml.activitydiagram3.ftile.Swimlane;
-import net.sourceforge.plantuml.graphic.Rainbow;
+import net.sourceforge.plantuml.decoration.Rainbow;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.style.StyleSignature;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 
 public abstract class GAbstractConnection implements GConnection {
 
@@ -86,20 +85,20 @@ public abstract class GAbstractConnection implements GConnection {
 	public void drawTranslate(UGraphic ug, UTranslate translate1, UTranslate translate2) {
 		throw new UnsupportedOperationException();
 	}
-	
-	private final StyleSignature getDefaultStyleDefinitionArrow() {
-		return StyleSignature.of(SName.root, SName.element, SName.activityDiagram, SName.arrow);
+
+	private final StyleSignatureBasic getDefaultStyleDefinitionArrow() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.activityDiagram, SName.arrow);
 	}
-	
+
+	protected ISkinParam skinParam() {
+		throw new UnsupportedOperationException("wip");
+	}
+
 	// DUPLICATE 4561
 	final protected Rainbow getInLinkRenderingColor() {
-		Rainbow color;
 		final ISkinParam skinParam = gpoint1.getGtile().skinParam();
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getDefaultStyleDefinitionArrow().getMergedStyle(skinParam.getCurrentStyleBuilder());
-			color = Rainbow.build(style, skinParam.getIHtmlColorSet(), skinParam.getThemeStyle());
-		} else
-			color = Rainbow.build(skinParam);
+		final Style style = getDefaultStyleDefinitionArrow().getMergedStyle(skinParam.getCurrentStyleBuilder());
+		final Rainbow color = Rainbow.build(style, skinParam.getIHtmlColorSet());
 //		final LinkRendering linkRendering = tile.getInLinkRendering();
 //		if (linkRendering == null) {
 //			if (UseStyle.useBetaStyle()) {
@@ -123,8 +122,5 @@ public abstract class GAbstractConnection implements GConnection {
 //		}
 		return color;
 	}
-
-
-
 
 }

@@ -2,15 +2,15 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
- * 
+ * Project Info:  https://plantuml.com
+ *
  * If you like this project or if you find it useful, you can support us at:
- * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
- * 
+ *
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
+ *
  * This file is part of PlantUML.
  *
  * PlantUML is free software; you can redistribute it and/or modify it
@@ -30,7 +30,7 @@
  *
  *
  * Original Author:  Arnaud Roques
- * 
+ *
  *
  */
 package net.sourceforge.plantuml.eggs;
@@ -43,10 +43,10 @@ import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.PlainDiagram;
 import net.sourceforge.plantuml.core.DiagramDescription;
 import net.sourceforge.plantuml.core.UmlSource;
-import net.sourceforge.plantuml.graphic.GraphicPosition;
-import net.sourceforge.plantuml.graphic.GraphicStrings;
-import net.sourceforge.plantuml.graphic.UDrawable;
-import net.sourceforge.plantuml.svek.TextBlockBackcolored;
+import net.sourceforge.plantuml.klimt.geom.GraphicPosition;
+import net.sourceforge.plantuml.klimt.shape.GraphicStrings;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.UDrawable;
 import net.sourceforge.plantuml.version.PSystemVersion;
 
 public class PSystemWelcome extends PlainDiagram {
@@ -69,7 +69,6 @@ public class PSystemWelcome extends PlainDiagram {
 		strings.add(" ");
 		strings.add("You will find more information about PlantUML syntax on <u>https://plantuml.com</u>");
 		strings.add(" ");
-		strings.add("(If you use this software, you accept its license)");
 		strings.add("(Details by typing \"\"license\"\" keyword)");
 		strings.add(" ");
 		if (position == GraphicPosition.BACKGROUND_CORNER_BOTTOM_RIGHT) {
@@ -85,10 +84,10 @@ public class PSystemWelcome extends PlainDiagram {
 		return getGraphicStrings();
 	}
 
-	public TextBlockBackcolored getGraphicStrings() throws IOException {
-		if (position != null) {
+	public TextBlock getGraphicStrings() {
+		if (position != null)
 			return GraphicStrings.createBlackOnWhite(strings, PSystemVersion.getPlantumlImage(), position);
-		}
+
 		return GraphicStrings.createBlackOnWhite(strings);
 	}
 

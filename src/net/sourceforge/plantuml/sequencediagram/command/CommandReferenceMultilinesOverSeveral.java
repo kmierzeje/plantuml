@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -39,23 +39,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sourceforge.plantuml.StringUtils;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.UrlBuilder;
-import net.sourceforge.plantuml.UrlBuilder.ModeUrl;
-import net.sourceforge.plantuml.command.BlocLines;
 import net.sourceforge.plantuml.command.CommandExecutionResult;
 import net.sourceforge.plantuml.command.CommandMultilines;
-import net.sourceforge.plantuml.cucadiagram.Display;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.NoSuchColorException;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.regex.RegexConcat;
+import net.sourceforge.plantuml.regex.RegexLeaf;
+import net.sourceforge.plantuml.regex.RegexOptional;
+import net.sourceforge.plantuml.regex.RegexResult;
 import net.sourceforge.plantuml.sequencediagram.Participant;
 import net.sourceforge.plantuml.sequencediagram.Reference;
 import net.sourceforge.plantuml.sequencediagram.SequenceDiagram;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.NoSuchColorException;
+import net.sourceforge.plantuml.url.Url;
+import net.sourceforge.plantuml.url.UrlBuilder;
+import net.sourceforge.plantuml.url.UrlMode;
+import net.sourceforge.plantuml.utils.BlocLines;
 
 public class CommandReferenceMultilinesOverSeveral extends CommandMultilines<SequenceDiagram> {
 
 	public CommandReferenceMultilinesOverSeveral() {
-		super("^ref(#\\w+)?[%s]+over[%s]+((?:[%pLN_.@]+|[%g][^%g]+[%g])(?:[%s]*,[%s]*(?:[%pLN_.@]+|[%g][^%g]+[%g]))*)[%s]*(#\\w+)?$");
+		super(getConcat().getPattern());
+	}
+
+	private static RegexConcat getConcat() {
+		return RegexConcat.build(CommandReferenceMultilinesOverSeveral.class.getName(), //
+				RegexLeaf.start(), //
+				new RegexLeaf("ref"), //
+				new RegexLeaf("REF", "(#\\w+)?"), //
+				RegexLeaf.spaceOneOrMore(), //
+				new RegexLeaf("over"), //
+				RegexLeaf.spaceOneOrMore(), //
+				new RegexLeaf("PARTS", "((?:[%pLN_.@]+|[%g][^%g]+[%g])(?:[%s]*,[%s]*(?:[%pLN_.@]+|[%g][^%g]+[%g]))*)"), //
+				RegexLeaf.spaceZeroOrMore(), //
+				new RegexOptional(new RegexLeaf("URL", "(\\[\\[.*?\\]\\])")), //
+				RegexLeaf.spaceZeroOrMore(), //
+				new RegexLeaf("UNUSED", "(#\\w+)?"), //
+				RegexLeaf.end());
 	}
 
 	@Override
@@ -64,32 +84,30 @@ public class CommandReferenceMultilinesOverSeveral extends CommandMultilines<Seq
 	}
 
 	public CommandExecutionResult execute(final SequenceDiagram diagram, BlocLines lines) throws NoSuchColorException {
-		final List<String> line0 = StringUtils.getSplit(getStartingPattern(),
-				lines.getFirst().getTrimmed().getString());
-		final String s1 = line0.get(0);
-		final HColor backColorElement = s1 == null ? null
-				: diagram.getSkinParam().getIHtmlColorSet().getColor(diagram.getSkinParam().getThemeStyle(), s1);
+		final String firstLine = lines.getFirst().getTrimmed().getString();
+		final RegexResult arg = getConcat().matcher(firstLine);
+		if (arg == null)
+			return CommandExecutionResult.error("Cannot parse line " + firstLine);
+
+		final String s1 = arg.get("REF", 0);
+		final HColor backColorElement = s1 == null ? null : diagram.getSkinParam().getIHtmlColorSet().getColor(s1);
 		// final HtmlColor backColorGeneral =
 		// HtmlColorSetSimple.instance().getColorIfValid(line0.get(1));
 
-		final List<String> participants = StringUtils.splitComma(line0.get(1));
+		final List<String> participants = StringUtils.splitComma(arg.get("PARTS", 0));
 		final List<Participant> p = new ArrayList<>();
-		for (String s : participants) {
+		for (String s : participants)
 			p.add(diagram.getOrCreateParticipant(StringUtils.eventuallyRemoveStartingAndEndingDoubleQuote(s)));
-		}
 
 		lines = lines.subExtract(1, 1);
 		lines = lines.removeEmptyColumns();
-		Display strings = lines.toDisplay();
+		final Display strings = lines.toDisplay();
 
+		final String url = arg.get("URL", 0);
+		final UrlBuilder b = new UrlBuilder(diagram.getSkinParam().getValue("topurl"), UrlMode.STRICT);
 		Url u = null;
-		if (strings.size() > 0) {
-			final UrlBuilder urlBuilder = new UrlBuilder(diagram.getSkinParam().getValue("topurl"), ModeUrl.STRICT);
-			u = urlBuilder.getUrl(strings.get(0).toString());
-		}
-		if (u != null) {
-			strings = strings.subList(1, strings.size());
-		}
+		if (url != null)
+			u = b.getUrl(url);
 
 		final HColor backColorGeneral = null;
 		final Reference ref = new Reference(p, u, strings, backColorGeneral, backColorElement,

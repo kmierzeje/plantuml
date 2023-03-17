@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,32 +35,34 @@
  */
 package net.sourceforge.plantuml.command;
 
-import net.sourceforge.plantuml.StringLocated;
-import net.sourceforge.plantuml.command.regex.Matcher2;
-import net.sourceforge.plantuml.command.regex.MyPattern;
-import net.sourceforge.plantuml.command.regex.Pattern2;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.regex.Matcher2;
+import net.sourceforge.plantuml.regex.MyPattern;
+import net.sourceforge.plantuml.regex.Pattern2;
+import net.sourceforge.plantuml.text.StringLocated;
+import net.sourceforge.plantuml.utils.BlocLines;
 
 public abstract class CommandMultilinesBracket<S extends Diagram> implements Command<S> {
 
 	private final Pattern2 starting;
-	
+
 	public CommandMultilinesBracket(String patternStart) {
-		if (patternStart.startsWith("^") == false || patternStart.endsWith("$") == false) {
+		if (patternStart.startsWith("^") == false || patternStart.endsWith("$") == false)
 			throw new IllegalArgumentException("Bad pattern " + patternStart);
-		}
+
 		this.starting = MyPattern.cmpile(patternStart);
 	}
 
 	protected boolean isCommandForbidden() {
 		return false;
 	}
-	
+
 	public String[] getDescription() {
 		return new String[] { "BRACKET: " + starting.pattern() };
 	}
 
-	protected void actionIfCommandValid() {
+	protected CommandControl finalVerification() {
+		return CommandControl.OK;
 	}
 
 	protected final Pattern2 getStartingPattern() {
@@ -68,40 +70,37 @@ public abstract class CommandMultilinesBracket<S extends Diagram> implements Com
 	}
 
 	final public CommandControl isValid(BlocLines lines) {
-		if (isCommandForbidden()) {
+		if (isCommandForbidden())
 			return CommandControl.NOT_OK;
-		}
+
 		final Matcher2 m1 = starting.matcher(lines.getFirst().getTrimmed().getString());
-		if (m1.matches() == false) {
+		if (m1.matches() == false)
 			return CommandControl.NOT_OK;
-		}
-		if (lines.size() == 1) {
+
+		if (lines.size() == 1)
 			return CommandControl.OK_PARTIAL;
-		}
 
 		int level = 1;
 		for (StringLocated cs : lines.subExtract(1, 0)) {
 			final String s = cs.getTrimmed().getString();
-			if (isLineConsistent(s, level) == false) {
+			if (isLineConsistent(s, level) == false)
 				return CommandControl.NOT_OK;
-			}
-			if (s.endsWith("{")) {
+
+			if (s.endsWith("{"))
 				level++;
-			}
-			if (s.endsWith("}")) {
+
+			if (s.endsWith("}"))
 				level--;
-			}
-			if (level < 0) {
+
+			if (level < 0)
 				return CommandControl.NOT_OK;
-			}
+
 		}
 
-		if (level != 0) {
+		if (level != 0)
 			return CommandControl.OK_PARTIAL;
-		}
 
-		actionIfCommandValid();
-		return CommandControl.OK;
+		return finalVerification();
 	}
 
 	protected abstract boolean isLineConsistent(String line, int level);

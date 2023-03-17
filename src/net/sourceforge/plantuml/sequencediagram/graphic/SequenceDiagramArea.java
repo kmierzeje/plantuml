@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,11 +35,9 @@
  */
 package net.sourceforge.plantuml.sequencediagram.graphic;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
 import net.sourceforge.plantuml.png.PngTitler;
 import net.sourceforge.plantuml.utils.MathUtils;
 
@@ -67,7 +65,7 @@ public class SequenceDiagramArea {
 	private boolean isLegendTop;
 	private HorizontalAlignment legendHorizontalAlignment;
 
-	public void setLegend(Dimension2D dimLegend, boolean isLegendTop, HorizontalAlignment horizontalAlignment) {
+	public void setLegend(XDimension2D dimLegend, boolean isLegendTop, HorizontalAlignment horizontalAlignment) {
 		this.legendHorizontalAlignment = horizontalAlignment;
 		this.legendWidth = dimLegend.getWidth();
 		this.legendHeight = dimLegend.getHeight();
@@ -83,13 +81,13 @@ public class SequenceDiagramArea {
 	}
 
 	public double getLegendX() {
-		if (legendHorizontalAlignment == HorizontalAlignment.LEFT) {
+		if (legendHorizontalAlignment == HorizontalAlignment.LEFT)
 			return 0;
-		} else if (legendHorizontalAlignment == HorizontalAlignment.RIGHT) {
+		else if (legendHorizontalAlignment == HorizontalAlignment.RIGHT)
 			return Math.max(0, getWidth() - legendWidth);
-		} else {
+		else
 			return Math.max(0, getWidth() - legendWidth) / 2;
-		}
+
 	}
 
 	public SequenceDiagramArea(double width, double height) {
@@ -107,7 +105,7 @@ public class SequenceDiagramArea {
 		this.captionHeight = height;
 	}
 
-	public void setCaptionArea(Dimension2D dim) {
+	public void setCaptionArea(XDimension2D dim) {
 		setCaptionArea(dim.getWidth(), dim.getHeight());
 	}
 
@@ -141,9 +139,9 @@ public class SequenceDiagramArea {
 	}
 
 	public double getLegendY() {
-		if (isLegendTop) {
+		if (isLegendTop)
 			return titleHeight + headerHeight + headerMargin;
-		}
+
 		return sequenceHeight + headerHeight + headerMargin + titleHeight;
 
 	}
@@ -169,9 +167,9 @@ public class SequenceDiagramArea {
 	}
 
 	public double getSequenceAreaY() {
-		if (isLegendTop) {
+		if (isLegendTop)
 			return getTitleY() + titleHeight + legendHeight;
-		}
+
 		return getTitleY() + titleHeight;
 	}
 
@@ -180,49 +178,43 @@ public class SequenceDiagramArea {
 	}
 
 	public double getFooterX(HorizontalAlignment align) {
-		if (align == HorizontalAlignment.LEFT) {
+		if (align == HorizontalAlignment.LEFT)
 			return 0;
-		}
-		if (align == HorizontalAlignment.RIGHT) {
+
+		if (align == HorizontalAlignment.RIGHT)
 			return getWidth() - footerWidth;
-		}
-		if (align == HorizontalAlignment.CENTER) {
+
+		if (align == HorizontalAlignment.CENTER)
 			return (getWidth() - footerWidth) / 2;
-		}
+
 		throw new IllegalStateException();
 	}
 
 	public double getHeaderX(HorizontalAlignment align) {
-		if (align == HorizontalAlignment.LEFT) {
+		if (align == HorizontalAlignment.LEFT)
 			return 0;
-		}
-		if (align == HorizontalAlignment.RIGHT) {
+
+		if (align == HorizontalAlignment.RIGHT)
 			return getWidth() - headerWidth;
-		}
-		if (align == HorizontalAlignment.CENTER) {
+
+		if (align == HorizontalAlignment.CENTER)
 			return (getWidth() - headerWidth) / 2;
-		}
+
 		throw new IllegalStateException();
 	}
 
 	public void initFooter(PngTitler pngTitler, StringBounder stringBounder) {
-		final Dimension2D dim = pngTitler.getTextDimension(stringBounder);
-		if (dim != null) {
-			if (UseStyle.useBetaStyle())
-				setFooterArea(dim.getWidth(), dim.getHeight(), 0);
-			else
-				setFooterArea(dim.getWidth(), dim.getHeight(), 3);
-		}
+		final XDimension2D dim = pngTitler.getTextDimension(stringBounder);
+		if (dim != null)
+			setFooterArea(dim.getWidth(), dim.getHeight(), 0);
+
 	}
 
 	public void initHeader(PngTitler pngTitler, StringBounder stringBounder) {
-		final Dimension2D dim = pngTitler.getTextDimension(stringBounder);
-		if (dim != null) {
-			if (UseStyle.useBetaStyle())
-				setHeaderArea(dim.getWidth(), dim.getHeight(), 0);
-			else
-				setHeaderArea(dim.getWidth(), dim.getHeight(), 3);
-		}
+		final XDimension2D dim = pngTitler.getTextDimension(stringBounder);
+		if (dim != null)
+			setHeaderArea(dim.getWidth(), dim.getHeight(), 0);
+
 	}
 
 }

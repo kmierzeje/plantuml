@@ -2,15 +2,15 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
- * 
+ * Project Info:  https://plantuml.com
+ *
  * If you like this project or if you find it useful, you can support us at:
- * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
- * 
+ *
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
+ *
  * This file is part of PlantUML.
  *
  * PlantUML is free software; you can redistribute it and/or modify it
@@ -35,33 +35,33 @@
  */
 package net.sourceforge.plantuml.classdiagram.command;
 
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.LineLocation;
 import net.sourceforge.plantuml.StringUtils;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.UrlBuilder;
-import net.sourceforge.plantuml.UrlBuilder.ModeUrl;
+import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.abel.LeafType;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.command.CommandExecutionResult;
 import net.sourceforge.plantuml.command.SingleLineCommand2;
-import net.sourceforge.plantuml.command.regex.IRegex;
-import net.sourceforge.plantuml.command.regex.RegexConcat;
-import net.sourceforge.plantuml.command.regex.RegexLeaf;
-import net.sourceforge.plantuml.command.regex.RegexOptional;
-import net.sourceforge.plantuml.command.regex.RegexOr;
-import net.sourceforge.plantuml.command.regex.RegexResult;
-import net.sourceforge.plantuml.cucadiagram.Code;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.cucadiagram.ILeaf;
-import net.sourceforge.plantuml.cucadiagram.Ident;
-import net.sourceforge.plantuml.cucadiagram.LeafType;
-import net.sourceforge.plantuml.cucadiagram.Stereotag;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.graphic.color.ColorParser;
-import net.sourceforge.plantuml.graphic.color.ColorType;
-import net.sourceforge.plantuml.graphic.color.Colors;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.NoSuchColorException;
+import net.sourceforge.plantuml.klimt.color.ColorParser;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.NoSuchColorException;
+import net.sourceforge.plantuml.klimt.creole.CreoleMode;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.font.FontParam;
+import net.sourceforge.plantuml.plasma.Quark;
+import net.sourceforge.plantuml.regex.IRegex;
+import net.sourceforge.plantuml.regex.RegexConcat;
+import net.sourceforge.plantuml.regex.RegexLeaf;
+import net.sourceforge.plantuml.regex.RegexOptional;
+import net.sourceforge.plantuml.regex.RegexOr;
+import net.sourceforge.plantuml.regex.RegexResult;
+import net.sourceforge.plantuml.stereo.Stereotag;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.url.Url;
+import net.sourceforge.plantuml.url.UrlBuilder;
+import net.sourceforge.plantuml.url.UrlMode;
+import net.sourceforge.plantuml.utils.LineLocation;
 
 public class CommandCreateClass extends SingleLineCommand2<ClassDiagram> {
 
@@ -80,7 +80,7 @@ public class CommandCreateClass extends SingleLineCommand2<ClassDiagram> {
 	private static IRegex getRegexConcat() {
 		return RegexConcat.build(CommandCreateClass.class.getName(), RegexLeaf.start(), //
 				new RegexLeaf("TYPE", //
-						"(interface|enum|annotation|abstract[%s]+class|abstract|class|entity|circle|diamond)"), //
+						"(interface|enum|annotation|abstract[%s]+class|static[%s]+class|abstract|class|entity|circle|diamond|protocol|struct|exception|metaclass|stereotype)"), //
 				RegexLeaf.spaceOneOrMore(), //
 				new RegexOr(//
 						new RegexConcat(//
@@ -100,20 +100,24 @@ public class CommandCreateClass extends SingleLineCommand2<ClassDiagram> {
 				new RegexOptional(new RegexConcat(RegexLeaf.spaceZeroOrMore(),
 						new RegexLeaf("GENERIC", "\\<(" + GenericRegexProducer.PATTERN + ")\\>"))), //
 				RegexLeaf.spaceZeroOrMore(), //
-				new RegexLeaf("STEREO", "(\\<{2}.*\\>{2})?"), //
+				new RegexLeaf("TAGS1", Stereotag.pattern() + "?"), //
 				RegexLeaf.spaceZeroOrMore(), //
-				new RegexLeaf("TAGS", Stereotag.pattern() + "?"), //
+				new RegexLeaf("STEREO", "(\\<\\<.*\\>\\>)?"), //
 				RegexLeaf.spaceZeroOrMore(), //
-				new RegexLeaf("URL", "(" + UrlBuilder.getRegexp() + ")?"), //
+				new RegexLeaf("TAGS2", Stereotag.pattern() + "?"), //
+				RegexLeaf.spaceZeroOrMore(), //
+				UrlBuilder.OPTIONAL, //
 				RegexLeaf.spaceZeroOrMore(), //
 				color().getRegex(), //
 				RegexLeaf.spaceZeroOrMore(), //
 				new RegexOptional(new RegexConcat(new RegexLeaf("##"),
 						new RegexLeaf("LINECOLOR", "(?:\\[(dotted|dashed|bold)\\])?(\\w+)?"))), //
 				new RegexOptional(new RegexConcat(RegexLeaf.spaceOneOrMore(),
-						new RegexLeaf("EXTENDS", "(extends)[%s]+(" + CommandCreateClassMultilines.CODES + ")"))), //
+						new RegexLeaf("EXTENDS",
+								"(extends)[%s]+(" + CommandCreateClassMultilines.CODES + "|[%g]([^%g]+)[%g])"))), //
 				new RegexOptional(new RegexConcat(RegexLeaf.spaceOneOrMore(),
-						new RegexLeaf("IMPLEMENTS", "(implements)[%s]+(" + CommandCreateClassMultilines.CODES + ")"))), //
+						new RegexLeaf("IMPLEMENTS",
+								"(implements)[%s]+(" + CommandCreateClassMultilines.CODES + "|[%g]([^%g]+)[%g])"))), //
 				new RegexOptional(new RegexConcat(RegexLeaf.spaceZeroOrMore(), new RegexLeaf("\\{"),
 						RegexLeaf.spaceZeroOrMore(), new RegexLeaf("\\}"))), //
 				RegexLeaf.end());
@@ -126,111 +130,71 @@ public class CommandCreateClass extends SingleLineCommand2<ClassDiagram> {
 	@Override
 	protected CommandExecutionResult executeArg(ClassDiagram diagram, LineLocation location, RegexResult arg)
 			throws NoSuchColorException {
-		final LeafType type = LeafType.getLeafType(StringUtils.goUpperCase(arg.get("TYPE", 0)));
-		final String idShort = StringUtils.eventuallyRemoveStartingAndEndingDoubleQuote(arg.getLazzy("CODE", 0),
-				"\"([:");
-		final String display = arg.getLazzy("DISPLAY", 0);
+		final String typeString = StringUtils.goUpperCase(arg.get("TYPE", 0));
+		final LeafType type = LeafType.getLeafType(typeString);
+		final String idShort = diagram.cleanId(arg.getLazzy("CODE", 0));
+		final String displayString = arg.getLazzy("DISPLAY", 0);
 		final String genericOption = arg.getLazzy("DISPLAY", 1);
 		final String generic = genericOption != null ? genericOption : arg.get("GENERIC", 0);
 
 		final String stereo = arg.get("STEREO", 0);
-		final ILeaf entity;
-		final Ident idNewLong = diagram.buildLeafIdent(idShort);
-		if (diagram.V1972()) {
-			if (diagram.leafExistSmart(idNewLong)) {
-				entity = diagram.getOrCreateLeaf(idNewLong, idNewLong, type, null);
-				if (entity.muteToType(type, null) == false) {
-					return CommandExecutionResult.error("Bad name");
-				}
-			} else {
-				entity = diagram.createLeaf(idNewLong, idNewLong, Display.getWithNewlines(display), type, null);
-			}
+
+		final Quark<Entity> quark = diagram.quarkInContext(false, idShort);
+
+		Entity entity = quark.getData();
+
+		if (entity == null) {
+			Display display = Display.getWithNewlines(displayString);
+			if (Display.isNull(display))
+				display = Display.getWithNewlines(quark.getName()).withCreoleMode(CreoleMode.SIMPLE_LINE);
+			entity = diagram.reallyCreateLeaf(quark, display, type, null);
 		} else {
-			final Code code = diagram.buildCode(idShort);
-			if (diagram.leafExist(code)) {
-				entity = diagram.getOrCreateLeaf(idNewLong, code, type, null);
-				if (entity.muteToType(type, null) == false) {
-					return CommandExecutionResult.error("Bad name");
-				}
-			} else {
-				entity = diagram.createLeaf(idNewLong, code, Display.getWithNewlines(display), type, null);
-			}
+			if (entity.muteToType(type, null) == false)
+				return CommandExecutionResult.error("Bad name");
 		}
+
+		final CommandExecutionResult check1 = diagram.checkIfPackageHierarchyIfOk(entity);
+		if (check1.isOk() == false)
+			return check1;
+
+		diagram.setLastEntity(entity);
 		if (stereo != null) {
 			entity.setStereotype(Stereotype.build(stereo, diagram.getSkinParam().getCircledCharacterRadius(),
 					diagram.getSkinParam().getFont(null, false, FontParam.CIRCLED_CHARACTER),
 					diagram.getSkinParam().getIHtmlColorSet()));
 			entity.setStereostyle(stereo);
 		}
-		if (generic != null) {
+		if (generic != null)
 			entity.setGeneric(generic);
-		}
 
 		final String urlString = arg.get("URL", 0);
 		if (urlString != null) {
-			final UrlBuilder urlBuilder = new UrlBuilder(diagram.getSkinParam().getValue("topurl"), ModeUrl.STRICT);
+			final UrlBuilder urlBuilder = new UrlBuilder(diagram.getSkinParam().getValue("topurl"), UrlMode.STRICT);
 			final Url url = urlBuilder.getUrl(urlString);
 			entity.addUrl(url);
 		}
 		entity.setCodeLine(location);
 
-		Colors colors = color().getColor(diagram.getSkinParam().getThemeStyle(), arg,
-				diagram.getSkinParam().getIHtmlColorSet());
+		Colors colors = color().getColor(arg, diagram.getSkinParam().getIHtmlColorSet());
 		final String s = arg.get("LINECOLOR", 1);
 
-		final HColor lineColor = s == null ? null
-				: diagram.getSkinParam().getIHtmlColorSet().getColor(diagram.getSkinParam().getThemeStyle(), s);
-		if (lineColor != null) {
+		final HColor lineColor = s == null ? null : diagram.getSkinParam().getIHtmlColorSet().getColor(s);
+		if (lineColor != null)
 			colors = colors.add(ColorType.LINE, lineColor);
-		}
-		if (arg.get("LINECOLOR", 0) != null) {
+
+		if (arg.get("LINECOLOR", 0) != null)
 			colors = colors.addLegacyStroke(arg.get("LINECOLOR", 0));
-		}
+
 		entity.setColors(colors);
 
-		// entity.setSpecificColorTOBEREMOVED(ColorType.LINE, lineColor);
-		// entity.setSpecificColorTOBEREMOVED(ColorType.HEADER,
-		// colors.getColor(ColorType.HEADER));
-		//
-		// if (colors.getLineStyle() != null) {
-		// entity.setSpecificLineStroke(LinkStyle.getStroke(colors.getLineStyle()));
-		// }
-		//
-		// if (arg.get("LINECOLOR", 0) != null) {
-		// entity.applyStroke(arg.get("LINECOLOR", 0));
-		// }
-
-		// manageExtends(diagram, arg, entity);
 		CommandCreateClassMultilines.manageExtends("EXTENDS", diagram, arg, entity);
 		CommandCreateClassMultilines.manageExtends("IMPLEMENTS", diagram, arg, entity);
-		CommandCreateClassMultilines.addTags(entity, arg.get("TAGS", 0));
+		CommandCreateClassMultilines.addTags(entity, arg.getLazzy("TAGS", 0));
+
+		if (typeString.contains("STATIC"))
+			entity.setStatic(true);
 
 		return CommandExecutionResult.ok();
 	}
-	// public static void manageExtends(ClassDiagram system, RegexResult arg, final
-	// IEntity entity) {
-	// if (arg.get("EXTENDS", 1) != null) {
-	// final Mode mode = arg.get("EXTENDS", 1).equalsIgnoreCase("extends") ?
-	// Mode.EXTENDS : Mode.IMPLEMENTS;
-	// final Code other = diagram.buildCode(arg.get("EXTENDS", 2));
-	// LeafType type2 = LeafType.CLASS;
-	// if (mode == Mode.IMPLEMENTS) {
-	// type2 = LeafType.INTERFACE;
-	// }
-	// if (mode == Mode.EXTENDS && entity.getEntityType() == LeafType.INTERFACE) {
-	// type2 = LeafType.INTERFACE;
-	// }
-	// final IEntity cl2 = system.getOrCreateLeaf(other, type2, null);
-	// LinkType typeLink = new LinkType(LinkDecor.NONE, LinkDecor.EXTENDS);
-	// if (type2 == LeafType.INTERFACE && entity.getEntityType() !=
-	// LeafType.INTERFACE) {
-	// typeLink = typeLink.getDashed();
-	// }
-	// final Link link = new Link(cl2, entity, typeLink, null, 2, null, null,
-	// system.getLabeldistance(),
-	// system.getLabelangle());
-	// system.addLink(link);
-	// }
-	// }
 
 }

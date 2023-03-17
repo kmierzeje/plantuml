@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -39,15 +39,15 @@ public enum WArrowDirection {
 	NORMAL, REVERSE, BOTH, NONE;
 
 	public static WArrowDirection from(String type) {
-		if (type.contains("<") && type.contains(">")) {
+		if (type.contains("<") && type.contains(">"))
 			return BOTH;
-		}
-		if (type.contains(">")) {
+
+		if (type.contains(">"))
 			return NORMAL;
-		}
-		if (type.contains("<")) {
+
+		if (type.contains("<"))
 			return REVERSE;
-		}
+
 		return NONE;
 	}
 

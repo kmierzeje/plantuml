@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -42,15 +42,23 @@ public class EntityPort {
 	private final String entityUid;
 	private final String portId;
 
-	public EntityPort(String entityUid, String portName) {
+	private EntityPort(String entityUid, String portId) {
 		this.entityUid = entityUid;
-		this.portId = portName == null ? null : Ports.encodePortNameToId(portName);
+		this.portId = portId;
+	}
+
+	public static EntityPort create(String entityUid, String portName) {
+		return new EntityPort(entityUid, portName == null ? null : Ports.encodePortNameToId(portName));
+	}
+
+	public static EntityPort forPort(String entityUid) {
+		return new EntityPort(entityUid, "P");
 	}
 
 	public String getFullString() {
-		if (portId != null) {
+		if (portId != null)
 			return entityUid + ":" + portId;
-		}
+
 		return entityUid;
 	}
 
@@ -59,9 +67,9 @@ public class EntityPort {
 	}
 
 	public String getPrefix() {
-		if (isShielded()) {
+		if (isShielded())
 			return entityUid.substring(0, entityUid.length() - 2);
-		}
+
 		return entityUid;
 	}
 
@@ -72,4 +80,5 @@ public class EntityPort {
 	public boolean equalsId(EntityPort other) {
 		return this.entityUid.equals(other.entityUid);
 	}
+
 }

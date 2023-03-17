@@ -2,15 +2,15 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
- * 
+ * Project Info:  https://plantuml.com
+ *
  * If you like this project or if you find it useful, you can support us at:
- * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
- * 
+ *
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
+ *
  * This file is part of PlantUML.
  *
  * PlantUML is free software; you can redistribute it and/or modify it
@@ -30,14 +30,12 @@
  *
  *
  * Original Author:  Arnaud Roques
- * 
+ *
  *
  */
 package net.sourceforge.plantuml.dedication;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.UnsupportedEncodingException;
 
 public final class TinyHashableString {
 
@@ -48,14 +46,14 @@ public final class TinyHashableString {
 		this.sentence = sentence;
 	}
 
-	public final String getSentence() {
+	public String getSentence() {
 		return sentence;
 	}
 
-	public final synchronized int tinyHash() throws UnsupportedEncodingException {
-		if (cachedTinyHash == -1) {
+	public synchronized int tinyHash() {
+		if (cachedTinyHash == -1)
 			cachedTinyHash = Noise.shortHash(sentence.getBytes(UTF_8), Dedication.N.toByteArray());
-		}
+
 		return cachedTinyHash;
 
 	}

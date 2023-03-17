@@ -97,6 +97,8 @@ import ext.plantuml.com.ctreber.aclib.sort.QuickSort;
  * @author Christian Treber, ct@ctreber.com
  */
 public class ACearth {
+	// ::remove folder when __CORE__
+	// ::remove folder when __MIT__
 	public static final String VERSION = "1.1";
 	public static final String BUILD = "22.11.2002 004";
 
@@ -115,7 +117,8 @@ public class ACearth {
 	/**
 	 * <p>
 	 * Well, the main class.
-	 * @param markers 
+	 * 
+	 * @param markers
 	 */
 	public ACearth(List<Marker> markers) {
 		// fsStartTime = System.currentTimeMillis();
@@ -171,15 +174,15 @@ public class ACearth {
 		// Process stars and lines (produces ScanDots-s).
 		List lScanDots = new ArrayList();
 		if (fConf.getBoolean("starsP")) {
-			ScanDotGenerator lGenerator = new DotGeneratorStars(fConf.getInt("imageWidth"),
-					fConf.getInt("imageHeight"), fConf.getDouble("starFrequency"), fConf.getInt("bigStars"), new Random(fCurrentTime));
+			ScanDotGenerator lGenerator = new DotGeneratorStars(fConf.getInt("imageWidth"), fConf.getInt("imageHeight"),
+					fConf.getDouble("starFrequency"), fConf.getInt("bigStars"), new Random(fCurrentTime));
 			lGenerator.generateScanDots();
 			lScanDots.addAll(lGenerator.getScanDots());
 		}
 
 		if (fConf.getBoolean("gridP")) {
-			ScanDotGenerator lGenerator = new DotGeneratorLines(lProjection, fConf.getInt("gridDivision"), fConf
-					.getInt("gridPixelDivision"));
+			ScanDotGenerator lGenerator = new DotGeneratorLines(lProjection, fConf.getInt("gridDivision"),
+					fConf.getInt("gridPixelDivision"));
 			lGenerator.generateScanDots();
 			lScanDots.addAll(lGenerator.getScanDots());
 		}
@@ -233,7 +236,8 @@ public class ACearth {
 		if (fConf.getInt("fixedTime") == 0) {
 			// No fixed time.
 			// final long lTimePassed = System.currentTimeMillis() - fsStartTime;
-			// fCurrentTime = fsStartTime + (long) (fConf.getDouble("timeWarpFactor") * lTimePassed);
+			// fCurrentTime = fsStartTime + (long) (fConf.getDouble("timeWarpFactor") *
+			// lTimePassed);
 			fCurrentTime = System.currentTimeMillis();
 		} else {
 			// Fixed time.
@@ -259,8 +263,8 @@ public class ACearth {
 
 		// for ViewRotGalactic, compute appropriate viewing rotation
 		if (fConf.is("viewRotationType", "Galactic")) {
-			fViewRotation = (Toolkit.degsToRads(fConf.getSunPos().getLat()
-					* Math.sin((fViewPos.getLong() - fConf.getSunPos().getLong()))));
+			fViewRotation = (Toolkit.degsToRads(
+					fConf.getSunPos().getLat() * Math.sin((fViewPos.getLong() - fConf.getSunPos().getLong()))));
 		} else {
 			fViewRotation = fConf.getDouble("viewRotation");
 		}
@@ -290,8 +294,8 @@ public class ACearth {
 		z = 1;
 
 		/*
-		 * rotate in about y axis (from z towards x) according to the number of
-		 * orbits we've completed
+		 * rotate in about y axis (from z towards x) according to the number of orbits
+		 * we've completed
 		 */
 		a = (double) pTimeMillis / (fConf.getDouble("orbitPeriod") * 3600 * 1000) * 2 * Math.PI;
 		c = Math.cos(a);
@@ -302,8 +306,8 @@ public class ACearth {
 		x = t2;
 
 		/*
-		 * rotate about z axis (from x towards y) according to the inclination
-		 * of the orbit
+		 * rotate about z axis (from x towards y) according to the inclination of the
+		 * orbit
 		 */
 		a = Toolkit.degsToRads(fConf.getDouble("orbitInclination"));
 		c = Math.cos(a);
@@ -314,8 +318,8 @@ public class ACearth {
 		y = t2;
 
 		/*
-		 * rotate about y axis (from x towards z) according to the number of
-		 * rotations the earth has made
+		 * rotate about y axis (from x towards z) according to the number of rotations
+		 * the earth has made
 		 */
 		a = ((double) pTimeMillis / 86400000) * (2 * Math.PI);
 		c = Math.cos(a);

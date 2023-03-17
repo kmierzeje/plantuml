@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -51,9 +51,12 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.sourceforge.plantuml.log.Logme;
 import net.sourceforge.plantuml.version.PSystemVersion;
 
 public class Splash extends Window implements MouseListener, MouseMotionListener {
+	// ::remove file when __CORE__
+	// ::remove file when __HAXE__
 
 	private static final Color LINK_NORMAL = Color.BLUE;
 	private static final Color LINK_HOVER = new Color(127, 0, 127);
@@ -139,7 +142,7 @@ public class Splash extends Window implements MouseListener, MouseMotionListener
 			try {
 				Desktop.getDesktop().browse(new URL("https://plantuml.com").toURI());
 			} catch (Exception e) {
-				e.printStackTrace();
+				Logme.error(e);
 			}
 			return;
 		}
@@ -192,7 +195,7 @@ public class Splash extends Window implements MouseListener, MouseMotionListener
 			g.drawString(message, 10, 20);
 		}
 		g.setColor(link);
-		final String urllink = "http://plantuml.com";
+		final String urllink = "https://plantuml.com";
 		final Rectangle2D rect = getUsed(g, urllink);
 		g.drawString(urllink, 10, (int) (height - rect.getMaxY()));
 		limY = (int) (height - rect.getMaxY() + rect.getMinY());
@@ -212,8 +215,8 @@ public class Splash extends Window implements MouseListener, MouseMotionListener
 		final int y = 33;
 		final int barWidth = 170;
 		final int barHeight = (int) (rect.getHeight() + 2);
-		final int grey = 230;
-		g.setColor(new Color(grey, grey, grey));
+		final int gray = 230;
+		g.setColor(new Color(gray, gray, gray));
 		final int value = barWidth * intValue / totalValue;
 		g.fillRect(x, y, value, barHeight);
 		g.setColor(Color.BLACK);

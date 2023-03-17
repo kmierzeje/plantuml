@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,40 +35,30 @@
  */
 package net.sourceforge.plantuml.skin.rose;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.ISkinSimple;
-import net.sourceforge.plantuml.LineBreakStrategy;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.SymbolContext;
-import net.sourceforge.plantuml.graphic.TextBlock;
+import net.sourceforge.plantuml.klimt.Fashion;
+import net.sourceforge.plantuml.klimt.LineBreakStrategy;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
 import net.sourceforge.plantuml.skin.AbstractTextualComponent;
 import net.sourceforge.plantuml.skin.ActorStyle;
 import net.sourceforge.plantuml.skin.Area;
+import net.sourceforge.plantuml.style.ISkinSimple;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.ugraphic.UFont;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
 
 public class ComponentRoseActor extends AbstractTextualComponent {
 
 	private final TextBlock stickman;
 	private final boolean head;
 
-	public ComponentRoseActor(ActorStyle actorStyle, Style style, Style stereo, SymbolContext biColor,
-			FontConfiguration font, Display stringsToDisplay, boolean head, ISkinSimple spriteContainer,
-			UFont fontForStereotype, HColor htmlColorForStereotype) {
-		super(style, stereo, LineBreakStrategy.NONE, stringsToDisplay, font, HorizontalAlignment.CENTER, 3, 3, 0,
-				spriteContainer, false, fontForStereotype, htmlColorForStereotype);
+	public ComponentRoseActor(ActorStyle actorStyle, Style style, Style stereo, Display stringsToDisplay, boolean head,
+			ISkinSimple spriteContainer) {
+		super(style, stereo, LineBreakStrategy.NONE, 3, 3, 0, spriteContainer, stringsToDisplay, false);
 		this.head = head;
-		if (UseStyle.useBetaStyle()) {
-			biColor = style.getSymbolContext(spriteContainer.getThemeStyle(), getIHtmlColorSet());
-		}
+		final Fashion biColor = style.getSymbolContext(getIHtmlColorSet());
 		this.stickman = actorStyle.getTextBlock(biColor);
 	}
 
@@ -76,7 +66,7 @@ public class ComponentRoseActor extends AbstractTextualComponent {
 	protected void drawInternalU(UGraphic ug, Area area) {
 		final TextBlock textBlock = getTextBlock();
 		final StringBounder stringBounder = ug.getStringBounder();
-		final Dimension2D dimStickman = stickman.calculateDimension(stringBounder);
+		final XDimension2D dimStickman = stickman.calculateDimension(stringBounder);
 		final double delta = (getPreferredWidth(stringBounder) - dimStickman.getWidth()) / 2;
 
 		if (head) {
@@ -95,13 +85,13 @@ public class ComponentRoseActor extends AbstractTextualComponent {
 
 	@Override
 	public double getPreferredHeight(StringBounder stringBounder) {
-		final Dimension2D dimStickman = stickman.calculateDimension(stringBounder);
+		final XDimension2D dimStickman = stickman.calculateDimension(stringBounder);
 		return dimStickman.getHeight() + getTextHeight(stringBounder);
 	}
 
 	@Override
 	public double getPreferredWidth(StringBounder stringBounder) {
-		final Dimension2D dimStickman = stickman.calculateDimension(stringBounder);
+		final XDimension2D dimStickman = stickman.calculateDimension(stringBounder);
 		return Math.max(dimStickman.getWidth(), getTextWidth(stringBounder));
 	}
 }

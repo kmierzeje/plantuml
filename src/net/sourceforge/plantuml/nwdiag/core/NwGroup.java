@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -34,28 +34,28 @@
  */
 package net.sourceforge.plantuml.nwdiag.core;
 
-import java.awt.geom.Dimension2D;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.MinMax;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
 import net.sourceforge.plantuml.nwdiag.next.NBox;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleBuilder;
-import net.sourceforge.plantuml.style.StyleSignature;
-import net.sourceforge.plantuml.ugraphic.MinMax;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 
 public class NwGroup implements NStackable {
 
@@ -67,20 +67,19 @@ public class NwGroup implements NStackable {
 	private NBox nbox;
 
 	public NBox getNboxInternal() {
-		if (nbox == null) {
+		if (nbox == null)
 			nbox = new NBox();
-		}
+
 		return nbox;
 	}
 
 	public final NBox getNbox(Map<String, ? extends NServer> servers) {
 		if (nbox == null) {
 			nbox = new NBox();
-			for (Entry<String, ? extends NServer> ent : servers.entrySet()) {
-				if (names.contains(ent.getKey())) {
+			for (Entry<String, ? extends NServer> ent : servers.entrySet())
+				if (names.contains(ent.getKey()))
 					nbox.add(ent.getValue().getBar());
-				}
-			}
+
 		}
 		return nbox;
 	}
@@ -130,15 +129,15 @@ public class NwGroup implements NStackable {
 
 	public double getTopHeaderHeight(StringBounder stringBounder, ISkinParam skinParam) {
 		final TextBlock block = buildHeaderName(skinParam);
-		if (block == null) {
+		if (block == null)
 			return 0;
-		}
-		final Dimension2D blockDim = block.calculateDimension(stringBounder);
+
+		final XDimension2D blockDim = block.calculateDimension(stringBounder);
 		return blockDim.getHeight();
 	}
 
-	private StyleSignature getStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.nwdiagDiagram, SName.group);
+	private StyleSignatureBasic getStyleDefinition() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.nwdiagDiagram, SName.group);
 	}
 
 	public void drawGroup(UGraphic ug, MinMax size, ISkinParam skinParam) {
@@ -146,31 +145,29 @@ public class NwGroup implements NStackable {
 		final Style style = getStyleDefinition().getMergedStyle(styleBuilder);
 		final TextBlock block = buildHeaderName(skinParam);
 		if (block != null) {
-			final Dimension2D blockDim = block.calculateDimension(ug.getStringBounder());
+			final XDimension2D blockDim = block.calculateDimension(ug.getStringBounder());
 			final double dy = size.getMinY() - blockDim.getHeight();
 			size = size.addPoint(size.getMinX(), dy);
 		}
 		HColor color = getColor();
-		if (color == null) {
-			color = style.value(PName.BackGroundColor).asColor(skinParam.getThemeStyle(), skinParam.getIHtmlColorSet());
+		if (color == null)
+			color = style.value(PName.BackGroundColor).asColor(skinParam.getIHtmlColorSet());
 
-		}
 		size.draw(ug, color);
 
-		if (block != null) {
+		if (block != null)
 			block.drawU(ug.apply(new UTranslate(size.getMinX() + 5, size.getMinY())));
-		}
+
 	}
 
 	private TextBlock buildHeaderName(ISkinParam skinParam) {
-		if (getDescription() == null) {
+		if (getDescription() == null)
 			return null;
-		}
+
 		final StyleBuilder styleBuilder = skinParam.getCurrentStyleBuilder();
 		final Style style = getStyleDefinition().getMergedStyle(styleBuilder);
-		return Display.getWithNewlines(getDescription()).create(
-				style.getFontConfiguration(skinParam.getThemeStyle(), skinParam.getIHtmlColorSet()),
-				HorizontalAlignment.LEFT, skinParam);
+		return Display.getWithNewlines(getDescription())
+				.create(style.getFontConfiguration(skinParam.getIHtmlColorSet()), HorizontalAlignment.LEFT, skinParam);
 	}
 
 }

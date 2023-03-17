@@ -1,10 +1,6 @@
 package net.sourceforge.plantuml.security;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -13,7 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Checks some security features
@@ -71,10 +71,10 @@ class SURLTest {
 	@ValueSource(strings = {
 			"http://localhost:8080/api",
 			"http://alice@localhost:8080/api",
-			"http://alice:secret@localhost:8080/api",
+			"http://alice_secret@localhost:8080/api",
 			"https://localhost:8080/api",
 			"https://alice@localhost:8080/api",
-			"https://alice:secret@localhost:8080/api"})
+			"https://alice_secret@localhost:8080/api"})
 	void removeUserInfo(String url) throws MalformedURLException {
 		SURL surl = SURL.createWithoutUser(new URL(url));
 

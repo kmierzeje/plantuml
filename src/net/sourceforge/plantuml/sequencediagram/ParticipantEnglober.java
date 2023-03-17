@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,9 +35,13 @@
  */
 package net.sourceforge.plantuml.sequencediagram;
 
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.stereo.Stereotype;
 
 public class ParticipantEnglober {
 
@@ -45,7 +49,7 @@ public class ParticipantEnglober {
 	final private Display title;
 	final private HColor boxColor;
 	final private Stereotype stereotype;
-	
+
 	@Override
 	public String toString() {
 		return title.toString();
@@ -80,6 +84,16 @@ public class ParticipantEnglober {
 
 	public final ParticipantEnglober getParent() {
 		return parent;
+	}
+
+	public final List<ParticipantEnglober> getGenealogy() {
+		final LinkedList<ParticipantEnglober> result = new LinkedList<>();
+		ParticipantEnglober current = this;
+		while (current != null) {
+			result.addFirst(current);
+			current = current.getParent();
+		}
+		return Collections.unmodifiableList(result);
 	}
 
 }

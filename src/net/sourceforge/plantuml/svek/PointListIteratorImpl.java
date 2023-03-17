@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,11 +35,11 @@
  */
 package net.sourceforge.plantuml.svek;
 
-import java.awt.geom.Point2D;
 import java.util.Collections;
 import java.util.List;
 
-import net.sourceforge.plantuml.Log;
+import net.sourceforge.plantuml.klimt.geom.XPoint2D;
+import net.sourceforge.plantuml.utils.Log;
 
 class PointListIteratorImpl implements PointListIterator {
 
@@ -69,12 +69,12 @@ class PointListIteratorImpl implements PointListIterator {
 		return true;
 	}
 
-	public List<Point2D.Double> next() {
+	public List<XPoint2D> next() {
 		if (pos == -1) {
 			return Collections.emptyList();
 		}
 		try {
-			final List<Point2D.Double> result = svg.substring(pos).extractList(SvgResult.POINTS_EQUALS);
+			final List<XPoint2D> result = svg.substring(pos).extractList(SvgResult.POINTS_EQUALS);
 			pos = svg.indexOf(SvgResult.POINTS_EQUALS, pos) + SvgResult.POINTS_EQUALS.length() + 1;
 			return result;
 		} catch (StringIndexOutOfBoundsException e) {

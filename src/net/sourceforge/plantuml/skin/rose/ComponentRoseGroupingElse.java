@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,73 +35,56 @@
  */
 package net.sourceforge.plantuml.skin.rose;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.ISkinSimple;
-import net.sourceforge.plantuml.LineBreakStrategy;
-import net.sourceforge.plantuml.SkinParamBackcolored;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
+import net.sourceforge.plantuml.klimt.LineBreakStrategy;
+import net.sourceforge.plantuml.klimt.UPath;
+import net.sourceforge.plantuml.klimt.UShape;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.ULine;
+import net.sourceforge.plantuml.klimt.shape.URectangle;
 import net.sourceforge.plantuml.skin.AbstractTextualComponent;
 import net.sourceforge.plantuml.skin.Area;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
+import net.sourceforge.plantuml.style.ISkinSimple;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.ULine;
-import net.sourceforge.plantuml.ugraphic.UPath;
-import net.sourceforge.plantuml.ugraphic.URectangle;
-import net.sourceforge.plantuml.ugraphic.UShape;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.HColorBackground;
-import net.sourceforge.plantuml.ugraphic.color.HColorNone;
 
 public class ComponentRoseGroupingElse extends AbstractTextualComponent {
 
 	private final HColor groupBorder;
 	private final HColor backgroundColor;
 	private final double roundCorner;
+	private final boolean teoz;
 
-	public ComponentRoseGroupingElse(Style style, HColor groupBorder, FontConfiguration smallFont, CharSequence comment,
-			ISkinSimple spriteContainer, HColor backgroundColor, double roundCorner) {
-		super(style, LineBreakStrategy.NONE, comment == null ? null : "[" + comment + "]", smallFont,
-				HorizontalAlignment.LEFT, 5, 5, 1, spriteContainer, null, null);
+	public ComponentRoseGroupingElse(boolean teoz, Style style, CharSequence comment, ISkinSimple spriteContainer) {
+		super(style, LineBreakStrategy.NONE, 5, 5, 1, spriteContainer, comment == null ? null : "[" + comment + "]");
 
-		if (UseStyle.useBetaStyle()) {
-			this.roundCorner = style.value(PName.RoundCorner).asInt();
-			if (spriteContainer instanceof SkinParamBackcolored) {
-				style = style.eventuallyOverride(PName.BackGroundColor,
-						((SkinParamBackcolored) spriteContainer).getBackgroundColor());
-			}
-			this.groupBorder = style.value(PName.LineColor).asColor(spriteContainer.getThemeStyle(),
-					getIHtmlColorSet());
-			this.backgroundColor = style.value(PName.BackGroundColor).asColor(spriteContainer.getThemeStyle(),
-					getIHtmlColorSet());
-		} else {
-			this.roundCorner = roundCorner;
-			this.groupBorder = groupBorder;
-			this.backgroundColor = backgroundColor;
-		}
+		this.teoz = teoz;
+		this.roundCorner = style.value(PName.RoundCorner).asInt(false);
+		this.groupBorder = style.value(PName.LineColor).asColor(getIHtmlColorSet());
+		this.backgroundColor = teoz ? HColors.transparent()
+				: style.value(PName.BackGroundColor).asColor(getIHtmlColorSet());
 	}
 
 	@Override
 	protected void drawBackgroundInternalU(UGraphic ug, Area area) {
-		if (backgroundColor instanceof HColorBackground) {
+		if (backgroundColor.isTransparent())
 			return;
-		}
-		final Dimension2D dimensionToUse = area.getDimensionToUse();
-		ug = ug.apply(new HColorNone()).apply(backgroundColor.bg());
+
+		final XDimension2D dimensionToUse = area.getDimensionToUse();
+		ug = ug.apply(HColors.none()).apply(backgroundColor.bg());
 		final double width = dimensionToUse.getWidth();
 		final double height = dimensionToUse.getHeight();
 		final UShape rect;
 		if (roundCorner == 0) {
-			rect = new URectangle(width, height);
+			rect = URectangle.build(width, height);
 		} else {
-			final UPath path = new UPath();
+			final UPath path = UPath.none();
 			path.moveTo(0, 0);
 			path.lineTo(width, 0);
 
@@ -119,16 +102,22 @@ public class ComponentRoseGroupingElse extends AbstractTextualComponent {
 
 	@Override
 	protected void drawInternalU(UGraphic ug, Area area) {
-		final Dimension2D dimensionToUse = area.getDimensionToUse();
+		final XDimension2D dimensionToUse = area.getDimensionToUse();
 		ug = ArrowConfiguration.stroke(ug, 2, 2, 1).apply(groupBorder);
 		ug.apply(UTranslate.dy(1)).draw(ULine.hline(dimensionToUse.getWidth()));
-		ug = ug.apply(new UStroke());
-		getTextBlock().drawU(ug.apply(new UTranslate(getMarginX1(), getMarginY())));
+		ug = ug.apply(UStroke.simple());
+		if (teoz)
+			getTextBlock().drawU(ug.apply(new UTranslate(getMarginX1(), getMarginY() + 2)));
+		else
+			getTextBlock().drawU(ug.apply(new UTranslate(getMarginX1(), getMarginY())));
 	}
 
 	@Override
 	public double getPreferredHeight(StringBounder stringBounder) {
-		return getTextHeight(stringBounder);
+		if (teoz)
+			return getTextHeight(stringBounder) + 16;
+		else
+			return getTextHeight(stringBounder);
 	}
 
 	@Override

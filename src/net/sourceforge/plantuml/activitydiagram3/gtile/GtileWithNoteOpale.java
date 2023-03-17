@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,41 +35,35 @@
  */
 package net.sourceforge.plantuml.activitydiagram3.gtile;
 
-import java.awt.geom.Dimension2D;
 import java.util.Set;
 
-import net.sourceforge.plantuml.AlignmentParam;
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.LineBreakStrategy;
-import net.sourceforge.plantuml.UseStyle;
 import net.sourceforge.plantuml.activitydiagram3.PositionedNote;
 import net.sourceforge.plantuml.activitydiagram3.ftile.Swimlane;
-import net.sourceforge.plantuml.creole.CreoleMode;
-import net.sourceforge.plantuml.creole.Parser;
-import net.sourceforge.plantuml.creole.Sheet;
-import net.sourceforge.plantuml.creole.SheetBlock1;
-import net.sourceforge.plantuml.creole.SheetBlock2;
-import net.sourceforge.plantuml.creole.Stencil;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
+import net.sourceforge.plantuml.klimt.LineBreakStrategy;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.CreoleMode;
+import net.sourceforge.plantuml.klimt.creole.Sheet;
+import net.sourceforge.plantuml.klimt.creole.SheetBlock1;
+import net.sourceforge.plantuml.klimt.creole.SheetBlock2;
+import net.sourceforge.plantuml.klimt.creole.Stencil;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
 import net.sourceforge.plantuml.sequencediagram.NotePosition;
 import net.sourceforge.plantuml.sequencediagram.NoteType;
-import net.sourceforge.plantuml.skin.rose.Rose;
+import net.sourceforge.plantuml.skin.AlignmentParam;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.style.Styleable;
 import net.sourceforge.plantuml.svek.image.Opale;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
 
 public class GtileWithNoteOpale extends AbstractGtile implements Stencil, Styleable {
 
@@ -83,18 +77,18 @@ public class GtileWithNoteOpale extends AbstractGtile implements Stencil, Stylea
 	private final UTranslate positionNote;
 	private final UTranslate positionTile;
 
-	private final Dimension2D dimNote;
-	private final Dimension2D dimTile;
+	private final XDimension2D dimNote;
+	private final XDimension2D dimTile;
 
-	public StyleSignature getDefaultStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.activityDiagram, SName.note);
+	public StyleSignatureBasic getStyleSignature() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.activityDiagram, SName.note);
 	}
-	
+
 	@Override
 	public Swimlane getSwimlane(String point) {
 		return tile.getSwimlane(point);
 	}
-	
+
 	@Override
 	public Set<Swimlane> getSwimlanes() {
 		return tile.getSwimlanes();
@@ -105,49 +99,32 @@ public class GtileWithNoteOpale extends AbstractGtile implements Stencil, Stylea
 		this.swimlaneNote = note.getSwimlaneNote();
 		if (note.getColors() != null)
 			skinParam = note.getColors().mute(skinParam);
-		
+
 		this.tile = tile;
 		this.notePosition = note.getNotePosition();
 		if (note.getType() == NoteType.FLOATING_NOTE)
 			withLink = false;
-		
 
-		final Rose rose = new Rose();
-
-		final HColor noteBackgroundColor;
-		final HColor borderColor;
-		final FontConfiguration fc;
-
-		final double shadowing;
-		final LineBreakStrategy wrapWidth;
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getDefaultStyleDefinition().getMergedStyle(skinParam.getCurrentStyleBuilder())
-					.eventuallyOverride(note.getColors());
-			noteBackgroundColor = style.value(PName.BackGroundColor).asColor(skinParam.getThemeStyle(),
-					getIHtmlColorSet());
-			borderColor = style.value(PName.LineColor).asColor(skinParam.getThemeStyle(), getIHtmlColorSet());
-			fc = style.getFontConfiguration(skinParam.getThemeStyle(), getIHtmlColorSet());
-			shadowing = style.value(PName.Shadowing).asDouble();
-			wrapWidth = style.wrapWidth();
-		} else {
-			noteBackgroundColor = rose.getHtmlColor(skinParam, ColorParam.noteBackground);
-			borderColor = rose.getHtmlColor(skinParam, ColorParam.noteBorder);
-			fc = new FontConfiguration(skinParam, FontParam.NOTE, null);
-			shadowing = skinParam.shadowing(null) ? 4 : 0;
-			wrapWidth = skinParam.wrapWidth();
-		}
+		final Style style = getStyleSignature().getMergedStyle(skinParam.getCurrentStyleBuilder())
+				.eventuallyOverride(note.getColors());
+		final HColor noteBackgroundColor = style.value(PName.BackGroundColor).asColor(getIHtmlColorSet());
+		final HColor borderColor = style.value(PName.LineColor).asColor(getIHtmlColorSet());
+		final FontConfiguration fc = style.getFontConfiguration(getIHtmlColorSet());
+		final double shadowing = style.value(PName.Shadowing).asDouble();
+		final LineBreakStrategy wrapWidth = style.wrapWidth();
+		final UStroke stroke = style.getStroke();
 
 		final HorizontalAlignment align = skinParam.getHorizontalAlignment(AlignmentParam.noteTextAlignment, null,
 				false, null);
-		final Sheet sheet = Parser.build(fc, align, skinParam, CreoleMode.FULL).createSheet(note.getDisplay());
+		final Sheet sheet = skinParam.sheet(fc, align, CreoleMode.FULL).createSheet(note.getDisplay());
 		final TextBlock text = new SheetBlock2(new SheetBlock1(sheet, wrapWidth, skinParam.getPadding()), this,
-				new UStroke(1));
-		this.opale = new Opale(shadowing, borderColor, noteBackgroundColor, text, withLink);
+				UStroke.withThickness(1));
+		this.opale = new Opale(shadowing, borderColor, noteBackgroundColor, text, withLink, stroke);
 
 		this.dimNote = opale.calculateDimension(stringBounder);
 		this.dimTile = tile.calculateDimension(stringBounder);
 
-		final Dimension2D dimTotal = calculateDimension(stringBounder);
+		final XDimension2D dimTotal = calculateDimension(stringBounder);
 
 		if (note.getNotePosition() == NotePosition.LEFT) {
 			this.positionNote = new UTranslate(0, (dimTotal.getHeight() - dimNote.getHeight()) / 2);
@@ -166,9 +143,9 @@ public class GtileWithNoteOpale extends AbstractGtile implements Stencil, Stylea
 	}
 
 	@Override
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
 		final double height = Math.max(dimNote.getHeight(), dimTile.getHeight());
-		return new Dimension2DDouble(dimTile.getWidth() + dimNote.getWidth() + suppSpace, height);
+		return new XDimension2D(dimTile.getWidth() + dimNote.getWidth() + suppSpace, height);
 	}
 
 	@Override

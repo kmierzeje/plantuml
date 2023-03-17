@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,24 +35,25 @@
  */
 package net.sourceforge.plantuml.donors;
 
-import java.awt.geom.Dimension2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.PlainDiagram;
-import net.sourceforge.plantuml.SkinParam;
 import net.sourceforge.plantuml.core.DiagramDescription;
 import net.sourceforge.plantuml.core.UmlSource;
-import net.sourceforge.plantuml.graphic.GraphicStrings;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.UDrawable;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.GraphicStrings;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.UDrawable;
+import net.sourceforge.plantuml.skin.SkinParam;
 
 public class PSystemSkinparameterList extends PlainDiagram {
+	// ::remove file when __CORE__
 
 	public PSystemSkinparameterList(UmlSource source) {
 		super(source);
@@ -67,7 +68,7 @@ public class PSystemSkinparameterList extends PlainDiagram {
 				double x = 0;
 				double y = 0;
 				for (TextBlock tb : cols) {
-					final Dimension2D dim = tb.calculateDimension(stringBounder);
+					final XDimension2D dim = tb.calculateDimension(stringBounder);
 					tb.drawU(ug.apply(UTranslate.dx(x)));
 					x += dim.getWidth() + 10;
 					y = Math.max(y, dim.getHeight());

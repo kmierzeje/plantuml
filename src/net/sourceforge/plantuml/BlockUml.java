@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -51,17 +51,23 @@ import java.util.Set;
 import net.sourceforge.plantuml.code.AsciiEncoder;
 import net.sourceforge.plantuml.code.Transcoder;
 import net.sourceforge.plantuml.code.TranscoderUtil;
-import net.sourceforge.plantuml.command.regex.Matcher2;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.error.PSystemErrorPreprocessor;
+import net.sourceforge.plantuml.log.Logme;
 import net.sourceforge.plantuml.preproc.Defines;
 import net.sourceforge.plantuml.preproc.FileWithSuffix;
 import net.sourceforge.plantuml.preproc2.PreprocessorModeSet;
+import net.sourceforge.plantuml.regex.Matcher2;
+import net.sourceforge.plantuml.style.ISkinSimple;
+import net.sourceforge.plantuml.text.BackSlash;
+import net.sourceforge.plantuml.text.StringLocated;
 import net.sourceforge.plantuml.tim.TimLoader;
+import net.sourceforge.plantuml.utils.LineLocationImpl;
 import net.sourceforge.plantuml.utils.StartUtils;
 import net.sourceforge.plantuml.version.Version;
 
 public class BlockUml {
+	// ::remove file when __HAXE__
 
 	private final List<StringLocated> rawSource;
 	private final List<StringLocated> data;
@@ -75,16 +81,19 @@ public class BlockUml {
 		return Collections.unmodifiableSet(included);
 	}
 
+	@Deprecated
 	BlockUml(String... strings) {
 		this(convert(strings), Defines.createEmpty(), null, null, null);
 	}
 
+	// ::comment when __CORE__
 	public String getEncodedUrl() throws IOException {
 		final Transcoder transcoder = TranscoderUtil.getDefaultTranscoder();
-		final String source = getDiagram().getSource().getPlainString();
+		final String source = getDiagram().getSource().getPlainString("\n");
 		final String encoded = transcoder.encode(source);
 		return encoded;
 	}
+	// ::done
 
 	public String getFlashData() {
 		final StringBuilder sb = new StringBuilder();
@@ -113,21 +122,23 @@ public class BlockUml {
 	private boolean preprocessorError;
 
 	/**
-	 * @deprecated being kept for backwards compatibility, perhaps other projects are using this? 
+	 * @deprecated being kept for backwards compatibility, perhaps other projects
+	 *             are using this?
 	 */
 	@Deprecated
 	public BlockUml(List<StringLocated> strings, Defines defines, ISkinSimple skinParam, PreprocessorModeSet mode) {
 		this(strings, defines, skinParam, mode, charsetOrDefault(mode.getCharset()));
 	}
-	
-	public BlockUml(List<StringLocated> strings, Defines defines, ISkinSimple skinParam, PreprocessorModeSet mode, Charset charset) {
+
+	public BlockUml(List<StringLocated> strings, Defines defines, ISkinSimple skinParam, PreprocessorModeSet mode,
+			Charset charset) {
 		this.rawSource = new ArrayList<>(strings);
 		this.localDefines = defines;
 		this.skinParam = skinParam;
 		final String s0 = strings.get(0).getTrimmed().getString();
-		if (StartUtils.startsWithSymbolAnd("start", s0) == false) {
+		if (StartUtils.startsWithSymbolAnd("start", s0) == false)
 			throw new IllegalArgumentException();
-		}
+
 		if (mode == null) {
 			this.data = new ArrayList<>(strings);
 		} else {
@@ -140,40 +151,42 @@ public class BlockUml {
 		}
 	}
 
+	// ::comment when __CORE__
 	public String getFileOrDirname() {
-		if (OptionFlags.getInstance().isWord()) {
+		if (OptionFlags.getInstance().isWord())
 			return null;
-		}
+
 		final Matcher2 m = StartUtils.patternFilename.matcher(StringUtils.trin(data.get(0).getString()));
 		final boolean ok = m.find();
-		if (ok == false) {
+		if (ok == false)
 			return null;
-		}
+
 		String result = m.group(1);
 		final int x = result.indexOf(',');
-		if (x != -1) {
+		if (x != -1)
 			result = result.substring(0, x);
-		}
+
 		for (int i = 0; i < result.length(); i++) {
 			final char c = result.charAt(i);
-			if ("<>|".indexOf(c) != -1) {
+			if ("<>|".indexOf(c) != -1)
 				return null;
-			}
+
 		}
-		if (result.startsWith("file://")) {
+		if (result.startsWith("file://"))
 			result = result.substring("file://".length());
-		}
+
 		result = result.replaceAll("\\.\\w\\w\\w$", "");
 		return result;
 	}
+	// ::done
 
 	public Diagram getDiagram() {
 		if (system == null) {
-			if (preprocessorError) {
+			if (preprocessorError)
 				system = new PSystemErrorPreprocessor(data, debug);
-			} else {
-				system = new PSystemBuilder().createPSystem(skinParam, data, rawSource);
-			}
+			else
+				system = new PSystemBuilder().createPSystem(data, rawSource,
+						skinParam == null ? Collections.<String, String>emptyMap() : skinParam.values());
 		}
 		return system;
 	}
@@ -182,17 +195,18 @@ public class BlockUml {
 		return data;
 	}
 
+	// ::comment when __CORE__
 	private String internalEtag() {
 		try {
 			final AsciiEncoder coder = new AsciiEncoder();
 			final MessageDigest msgDigest = MessageDigest.getInstance("MD5");
-			for (StringLocated s : data) {
+			for (StringLocated s : data)
 				msgDigest.update(s.getString().getBytes(UTF_8));
-			}
+
 			final byte[] digest = msgDigest.digest();
 			return coder.encode(digest);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logme.error(e);
 			return "NOETAG";
 		}
 	}
@@ -200,6 +214,7 @@ public class BlockUml {
 	public String etag() {
 		return Version.etag() + internalEtag();
 	}
+	// ::done
 
 	public long lastModified() {
 		return (Version.compileTime() / 1000L / 60) * 1000L * 60 + Version.beta() * 1000L * 3600;
@@ -212,12 +227,12 @@ public class BlockUml {
 
 	public List<String> getDefinition(boolean withHeader) {
 		final List<String> result = new ArrayList<>();
-		for (StringLocated s : data) {
+		for (StringLocated s : data)
 			result.add(s.getString());
-		}
-		if (withHeader) {
+
+		if (withHeader)
 			return Collections.unmodifiableList(result);
-		}
+
 		return Collections.unmodifiableList(result.subList(1, result.size() - 1));
 	}
 

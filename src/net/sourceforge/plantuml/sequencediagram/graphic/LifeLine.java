@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -41,29 +41,29 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.SkinParamBackcolored;
-import net.sourceforge.plantuml.SkinParamForceColor;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.SymbolContext;
+import net.sourceforge.plantuml.klimt.Fashion;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.skin.ColorParam;
 import net.sourceforge.plantuml.skin.Component;
 import net.sourceforge.plantuml.skin.ComponentType;
+import net.sourceforge.plantuml.skin.SkinParamBackcolored;
+import net.sourceforge.plantuml.skin.SkinParamForceColor;
 import net.sourceforge.plantuml.skin.rose.Rose;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
 
 public class LifeLine {
 
 	static class Variation {
 		final private LifeSegmentVariation type;
-		final private SymbolContext colors;
+		final private Fashion colors;
 		final private double y;
 
-		Variation(LifeSegmentVariation type, double y, SymbolContext backcolor) {
+		Variation(LifeSegmentVariation type, double y, Fashion backcolor) {
 			this.type = type;
 			this.y = y;
 			this.colors = backcolor;
@@ -89,7 +89,7 @@ public class LifeLine {
 		this.shadowing = shadowing;
 	}
 
-	public void addSegmentVariation(LifeSegmentVariation type, double y, SymbolContext colors) {
+	public void addSegmentVariation(LifeSegmentVariation type, double y, Fashion colors) {
 		if (events.size() > 0) {
 			final Variation last = events.get(events.size() - 1);
 			if (y < last.y) {
@@ -186,10 +186,10 @@ public class LifeLine {
 			if (level == 0) {
 				final double y1 = events.get(i).y;
 				final double y2 = events.get(j).y;
-				return new SegmentColored(y1, y2, events.get(i).colors, shadowing);
+				return SegmentColored.create(y1, y2, events.get(i).colors, shadowing);
 			}
 		}
-		return new SegmentColored(events.get(i).y, events.get(events.size() - 1).y, events.get(i).colors, shadowing);
+		return SegmentColored.create(events.get(i).y, events.get(events.size() - 1).y, events.get(i).colors, shadowing);
 	}
 
 	private Collection<SegmentColored> getSegmentsCutted(StringBounder stringBounder, int i) {
@@ -220,13 +220,13 @@ public class LifeLine {
 					type = type == ComponentType.ALIVE_BOX_CLOSE_OPEN ? ComponentType.ALIVE_BOX_CLOSE_CLOSE
 							: ComponentType.ALIVE_BOX_OPEN_CLOSE;
 				}
-				Style style = type.getDefaultStyleDefinition().getMergedStyle(skinParam2.getCurrentStyleBuilder());
+				Style style = type.getStyleSignature().getMergedStyle(skinParam2.getCurrentStyleBuilder());
 				if (style != null) {
 					style = style.eventuallyOverride(PName.BackGroundColor, specificBackColor);
 					style = style.eventuallyOverride(PName.LineColor, specificLineColor);
 				}
-				final Component compAliveBox = skin
-						.createComponent(new Style[] { style }, type, null, skinParam2, null);
+				final Component compAliveBox = skin.createComponent(new Style[] { style }, type, null, skinParam2,
+						null);
 				type = ComponentType.ALIVE_BOX_OPEN_OPEN;
 				final int currentLevel = getLevel(seg.getPos1Initial());
 				seg.drawU(ug, compAliveBox, currentLevel);
@@ -258,7 +258,7 @@ public class LifeLine {
 		return shadowing;
 	}
 
-	public SymbolContext getColors() {
+	public Fashion getColors() {
 		if (events.size() == 0) {
 			return null;
 		}

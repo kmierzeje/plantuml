@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,18 +35,21 @@
  */
 package net.sourceforge.plantuml.command;
 
-import net.sourceforge.plantuml.FontParam;
 import net.sourceforge.plantuml.TitledDiagram;
 import net.sourceforge.plantuml.UmlDiagram;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.command.regex.Matcher2;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.ugraphic.color.NoSuchColorException;
+import net.sourceforge.plantuml.klimt.color.NoSuchColorException;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.font.FontParam;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.regex.Matcher2;
+import net.sourceforge.plantuml.utils.BlocLines;
 
 public class CommandMultilinesFooter extends CommandMultilines<TitledDiagram> {
+    // ::remove folder when __HAXE__
 
-	public CommandMultilinesFooter() {
+	public static final CommandMultilinesFooter ME = new CommandMultilinesFooter();
+
+	private CommandMultilinesFooter() {
 		super("^(?:(left|right|center)?[%s]*)footer$");
 	}
 
@@ -66,11 +69,11 @@ public class CommandMultilinesFooter extends CommandMultilines<TitledDiagram> {
 		final Display strings = lines.toDisplay();
 		if (strings.size() > 0) {
 			HorizontalAlignment ha = HorizontalAlignment.fromString(align, HorizontalAlignment.CENTER);
-			if (UseStyle.useBetaStyle() && align == null) {
+			if (align == null)
 				ha = FontParam.FOOTER.getStyleDefinition(null)
 						.getMergedStyle(((UmlDiagram) diagram).getSkinParam().getCurrentStyleBuilder())
 						.getHorizontalAlignment();
-			}
+
 			diagram.getFooter().putDisplay(strings, ha);
 			return CommandExecutionResult.ok();
 		}

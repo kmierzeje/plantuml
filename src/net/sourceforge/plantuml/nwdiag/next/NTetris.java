@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -43,7 +43,7 @@ public class NTetris<S extends Staged> {
 
 	private final Map<S, Integer> all = new LinkedHashMap<>();
 	private final BooleanGrid grid = new BooleanGrid();
-	
+
 	@Override
 	public String toString() {
 		return all.toString();
@@ -58,9 +58,9 @@ public class NTetris<S extends Staged> {
 				return;
 			}
 			x++;
-			if (x > 100) {
+			if (x > 100)
 				throw new IllegalStateException();
-			}
+
 		}
 	}
 
@@ -70,9 +70,9 @@ public class NTetris<S extends Staged> {
 
 	public int getNWidth() {
 		int max = 0;
-		for (Entry<S, Integer> ent : all.entrySet()) {
+		for (Entry<S, Integer> ent : all.entrySet())
 			max = Math.max(max, ent.getValue() + ent.getKey().getNWidth());
-		}
+
 		return max;
 	}
 

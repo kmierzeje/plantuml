@@ -2,15 +2,15 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
- * 
+ * Project Info:  https://plantuml.com
+ *
  * If you like this project or if you find it useful, you can support us at:
- * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
- * 
+ *
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
+ *
  * This file is part of PlantUML.
  *
  * PlantUML is free software; you can redistribute it and/or modify it
@@ -30,54 +30,52 @@
  *
  *
  * Original Author:  Arnaud Roques
- * 
+ *
  *
  */
 package net.sourceforge.plantuml.svek.image;
 
-import java.awt.geom.Dimension2D;
-import java.awt.geom.Point2D;
+import java.util.EnumMap;
+import java.util.Map;
 
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.Guillemet;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.LineParam;
-import net.sourceforge.plantuml.SkinParamUtils;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.creole.Stencil;
+import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.abel.EntityPortion;
+import net.sourceforge.plantuml.abel.LeafType;
 import net.sourceforge.plantuml.cucadiagram.BodyFactory;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.cucadiagram.EntityPortion;
-import net.sourceforge.plantuml.cucadiagram.ILeaf;
-import net.sourceforge.plantuml.cucadiagram.LeafType;
 import net.sourceforge.plantuml.cucadiagram.PortionShower;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.SkinParameter;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.TextBlockUtils;
-import net.sourceforge.plantuml.graphic.color.ColorType;
-import net.sourceforge.plantuml.graphic.color.Colors;
+import net.sourceforge.plantuml.klimt.UGroupType;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.Colors;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.creole.Stencil;
+import net.sourceforge.plantuml.klimt.drawing.AbstractUGraphicHorizontalLine;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.FontParam;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.geom.XPoint2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.TextBlockInEllipse;
+import net.sourceforge.plantuml.klimt.shape.TextBlockUtils;
+import net.sourceforge.plantuml.klimt.shape.UEllipse;
+import net.sourceforge.plantuml.klimt.shape.UHorizontalLine;
+import net.sourceforge.plantuml.klimt.shape.ULine;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.svek.AbstractEntityImage;
 import net.sourceforge.plantuml.svek.ShapeType;
-import net.sourceforge.plantuml.ugraphic.AbstractUGraphicHorizontalLine;
-import net.sourceforge.plantuml.ugraphic.TextBlockInEllipse;
-import net.sourceforge.plantuml.ugraphic.UEllipse;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UGroupType;
-import net.sourceforge.plantuml.ugraphic.UHorizontalLine;
-import net.sourceforge.plantuml.ugraphic.ULine;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.text.Guillemet;
+import net.sourceforge.plantuml.url.Url;
 
 public class EntityImageUseCase extends AbstractEntityImage {
 
@@ -85,19 +83,15 @@ public class EntityImageUseCase extends AbstractEntityImage {
 
 	final private Url url;
 
-	public EntityImageUseCase(ILeaf entity, ISkinParam skinParam2, PortionShower portionShower) {
+	public EntityImageUseCase(Entity entity, ISkinParam skinParam2, PortionShower portionShower) {
 		super(entity, entity.getColors().mute(skinParam2));
 		final Stereotype stereotype = entity.getStereotype();
 
-		final HorizontalAlignment align;
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getStyle();
-			align = style.getHorizontalAlignment();
-		} else {
-			align = HorizontalAlignment.CENTER;
-		}
+		final Style style = getStyle();
+		final HorizontalAlignment align = style.getHorizontalAlignment();
+
 		final TextBlock tmp = BodyFactory.create2(getSkinParam().getDefaultTextAlignment(align), entity.getDisplay(),
-				FontParam.USECASE, getSkinParam(), stereotype, entity, getStyle());
+				getSkinParam(), stereotype, entity, getStyle());
 
 		if (stereotype == null || stereotype.getLabel(Guillemet.DOUBLE_COMPARATOR) == null
 				|| portionShower.showPortion(EntityPortion.STEREOTYPE, entity) == false) {
@@ -108,7 +102,7 @@ public class EntityImageUseCase extends AbstractEntityImage {
 				stereo = stereotype.getSprite(getSkinParam());
 			} else {
 				stereo = Display.getWithNewlines(stereotype.getLabel(getSkinParam().guillemet())).create(
-						new FontConfiguration(getSkinParam(), FontParam.USECASE_STEREOTYPE, stereotype),
+						FontConfiguration.create(getSkinParam(), FontParam.USECASE_STEREOTYPE, stereotype),
 						HorizontalAlignment.CENTER, getSkinParam());
 			}
 			this.desc = TextBlockUtils.mergeTB(stereo, tmp, HorizontalAlignment.CENTER);
@@ -117,53 +111,42 @@ public class EntityImageUseCase extends AbstractEntityImage {
 
 	}
 
-	private UStroke getStroke() {
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getStyle();
-			return style.getStroke();
-		}
-		UStroke stroke = getSkinParam().getThickness(LineParam.usecaseBorder, getStereo());
-		if (stroke == null) {
-			stroke = new UStroke(1.5);
-		}
-		final Colors colors = getEntity().getColors();
-		stroke = colors.muteStroke(stroke);
-		return stroke;
-	}
-
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
 		return new TextBlockInEllipse(desc, stringBounder).calculateDimension(stringBounder);
 	}
 
 	final public void drawU(UGraphic ug) {
 		final StringBounder stringBounder = ug.getStringBounder();
+
+		final Style style = getStyle();
+		final double shadow = style.value(PName.Shadowing).asDouble();
+
 		final TextBlockInEllipse ellipse = new TextBlockInEllipse(desc, stringBounder);
-		if (getSkinParam().shadowing2(getEntity().getStereotype(), SkinParameter.USECASE)) {
-			ellipse.setDeltaShadow(3);
-		}
+		ellipse.setDeltaShadow(shadow);
 
-		if (url != null) {
+		if (url != null)
 			ug.startUrl(url);
-		}
 
-		ug = ug.apply(getStroke());
+		ug = ug.apply(getStyle().getStroke(getEntity().getColors()));
 		final HColor linecolor = getLineColor();
 		ug = ug.apply(linecolor);
 		final HColor backcolor = getBackColor();
 		ug = ug.apply(backcolor.bg());
 		final UGraphic ug2 = new MyUGraphicEllipse(ug, 0, 0, ellipse.getUEllipse());
 
-		ug2.startGroup(UGroupType.CLASS, "elem " + getEntity().getCode() + " selected");
+		final Map<UGroupType, String> typeIDent = new EnumMap<>(UGroupType.class);
+		typeIDent.put(UGroupType.CLASS, "elem " + getEntity().getName() + " selected");
+		typeIDent.put(UGroupType.ID, "elem_" + getEntity().getName());
+		ug.startGroup(typeIDent);
 		ellipse.drawU(ug2);
 		ug2.closeGroup();
 
-		if (getEntity().getLeafType() == LeafType.USECASE_BUSINESS) {
+		if (getEntity().getLeafType() == LeafType.USECASE_BUSINESS)
 			specialBusiness(ug, ellipse.getUEllipse());
-		}
 
-		if (url != null) {
+		if (url != null)
 			ug.closeUrl();
-		}
+
 	}
 
 	private void specialBusiness(UGraphic ug, UEllipse frontier) {
@@ -173,21 +156,21 @@ public class EntityImageUseCase extends AbstractEntityImage {
 		final double theta2 = rotatedEllipse.getOtherTheta(theta1);
 
 		final UEllipse frontier2 = frontier.scale(0.99);
-		final Point2D p1 = frontier2.getPointAtAngle(-theta1);
-		final Point2D p2 = frontier2.getPointAtAngle(-theta2);
+		final XPoint2D p1 = frontier2.getPointAtAngle(-theta1);
+		final XPoint2D p2 = frontier2.getPointAtAngle(-theta2);
 		drawLine(ug, p1, p2);
 	}
 
 	private void specialBusiness0(UGraphic ug, UEllipse frontier) {
 		final double c = frontier.getWidth() / frontier.getHeight();
 		final double ouverture = Math.PI / 2;
-		final Point2D p1 = frontier.getPointAtAngle(getTrueAngle(c, Math.PI / 4 - ouverture));
-		final Point2D p2 = frontier.getPointAtAngle(getTrueAngle(c, Math.PI / 4 + ouverture));
+		final XPoint2D p1 = frontier.getPointAtAngle(getTrueAngle(c, Math.PI / 4 - ouverture));
+		final XPoint2D p2 = frontier.getPointAtAngle(getTrueAngle(c, Math.PI / 4 + ouverture));
 		drawLine(ug, p1, p2);
 	}
 
-	private void drawLine(UGraphic ug, final Point2D p1, final Point2D p2) {
-		ug = ug.apply(new UTranslate(p1));
+	private void drawLine(UGraphic ug, final XPoint2D p1, final XPoint2D p2) {
+		ug = ug.apply(UTranslate.point(p1));
 		ug.draw(new ULine(p2.getX() - p1.getX(), p2.getY() - p1.getY()));
 	}
 
@@ -198,15 +181,10 @@ public class EntityImageUseCase extends AbstractEntityImage {
 	private HColor getBackColor() {
 		HColor backcolor = getEntity().getColors().getColor(ColorType.BACK);
 		if (backcolor == null) {
-			if (UseStyle.useBetaStyle()) {
-				Style style = getStyle();
-				final Colors colors = getEntity().getColors();
-				style = style.eventuallyOverride(colors);
-				backcolor = style.value(PName.BackGroundColor).asColor(getSkinParam().getThemeStyle(),
-						getSkinParam().getIHtmlColorSet());
-			} else {
-				backcolor = SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.usecaseBackground);
-			}
+			final Colors colors = getEntity().getColors();
+			Style style = getStyle();
+			style = style.eventuallyOverride(colors);
+			backcolor = style.value(PName.BackGroundColor).asColor(getSkinParam().getIHtmlColorSet());
 		}
 		return backcolor;
 	}
@@ -216,19 +194,20 @@ public class EntityImageUseCase extends AbstractEntityImage {
 	}
 
 	private StyleSignature getDefaultStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.componentDiagram, SName.usecase).with(getStereo());
+		final LeafType type = getEntity().getLeafType();
+		if (type == LeafType.USECASE_BUSINESS)
+			return StyleSignatureBasic
+					.of(SName.root, SName.element, SName.componentDiagram, SName.usecase, SName.business)
+					.withTOBECHANGED(getStereo());
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.componentDiagram, SName.usecase)
+				.withTOBECHANGED(getStereo());
 	}
 
 	private HColor getLineColor() {
 		HColor linecolor = getEntity().getColors().getColor(ColorType.LINE);
 		if (linecolor == null) {
-			if (UseStyle.useBetaStyle()) {
-				final Style style = getStyle();
-				linecolor = style.value(PName.LineColor).asColor(getSkinParam().getThemeStyle(),
-						getSkinParam().getIHtmlColorSet());
-			} else {
-				linecolor = SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.usecaseBorder);
-			}
+			final Style style = getStyle();
+			linecolor = style.value(PName.LineColor).asColor(getSkinParam().getIHtmlColorSet());
 		}
 		return linecolor;
 	}
@@ -256,13 +235,13 @@ public class EntityImageUseCase extends AbstractEntityImage {
 		}
 
 		private double getNormalized(double y) {
-			if (y < yTheoricalPosition) {
+			if (y < yTheoricalPosition)
 				throw new IllegalArgumentException();
-			}
+
 			y = y - yTheoricalPosition;
-			if (y > ellipse.getHeight()) {
+			if (y > ellipse.getHeight())
 				throw new IllegalArgumentException();
-			}
+
 			return y;
 		}
 
@@ -290,7 +269,7 @@ public class EntityImageUseCase extends AbstractEntityImage {
 
 		@Override
 		protected void drawHline(UGraphic ug, UHorizontalLine line, UTranslate translate) {
-			final UStroke stroke = new UStroke(1.5);
+			final UStroke stroke = UStroke.withThickness(1.5);
 			line.drawLineInternal(ug.apply(translate), getStencil2(translate), 0, stroke);
 		}
 

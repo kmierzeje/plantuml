@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -68,9 +68,13 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.swing.ImageIcon;
 
 import net.sourceforge.plantuml.StringUtils;
+import net.sourceforge.plantuml.log.Logme;
 import net.sourceforge.plantuml.security.authentication.SecurityAccessInterceptor;
 import net.sourceforge.plantuml.security.authentication.SecurityAuthentication;
 import net.sourceforge.plantuml.security.authentication.SecurityCredentials;
+//::uncomment when __CORE__
+//import net.sourceforge.plantuml.FileUtils;
+//::done
 
 /**
  * Secure replacement for java.net.URL.
@@ -108,21 +112,6 @@ public class SURL {
 	public static final String WITHOUT_AUTHENTICATION = SecurityUtils.NO_CREDENTIALS;
 
 	/**
-	 * Regex to remove the UserInfo part from a URL.
-	 */
-	private static final Pattern PATTERN_USERINFO = Pattern.compile("(^https?://)(.*@)(.*)");
-
-	private static final ExecutorService EXE = Executors.newCachedThreadPool(new ThreadFactory() {
-		public Thread newThread(Runnable r) {
-			final Thread t = Executors.defaultThreadFactory().newThread(r);
-			t.setDaemon(true);
-			return t;
-		}
-	});
-
-	private static final Map<String, Long> BAD_HOSTS = new ConcurrentHashMap<String, Long>();
-
-	/**
 	 * Internal URL, maybe cleaned from user-token.
 	 */
 	private final URL internal;
@@ -154,7 +143,7 @@ public class SURL {
 			try {
 				return create(new URL(url));
 			} catch (MalformedURLException e) {
-				e.printStackTrace();
+				Logme.error(e);
 			}
 		return null;
 	}
@@ -172,6 +161,7 @@ public class SURL {
 		if (url == null)
 			throw new MalformedURLException("URL cannot be null");
 
+		// ::comment when __CORE__
 		final String credentialId = url.getUserInfo();
 
 		if (credentialId == null || credentialId.indexOf(':') > 0)
@@ -182,8 +172,95 @@ public class SURL {
 			// Given userInfo, but without a password. We try to find SecurityCredentials
 			return new SURL(removeUserInfo(url), credentialId);
 		else
+			// ::done
 			return new SURL(url, WITHOUT_AUTHENTICATION);
 	}
+
+	// ::uncomment when __CORE__
+//	public InputStream openStream() {
+//	try {
+//		return internal.openStream();
+//	} catch (IOException e) {
+//		System.err.println("SURL::openStream " + e);
+//		return null;
+//	}
+//}
+//public byte[] getBytes() {
+//	final InputStream is = openStream();
+//	if (is != null)
+//		try {
+//			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//			FileUtils.copyInternal(is, baos, true);
+//			return baos.toByteArray();
+//		} catch (IOException e) {
+//			System.err.println("SURL::getBytes " + e);
+//		}
+//	return null;
+//}
+	// ::done
+
+	public BufferedImage readRasterImageFromURL() {
+		if (isUrlOk())
+			try {
+				final byte[] bytes = getBytes();
+				if (bytes == null || bytes.length == 0)
+					return null;
+				final ImageIcon tmp = new ImageIcon(bytes);
+				return SecurityUtils.readRasterImage(tmp);
+			} catch (Exception e) {
+				Logme.error(e);
+			}
+		return null;
+	}
+
+	/**
+	 * Check SecurityProfile to see if this URL can be opened.
+	 */
+	private boolean isUrlOk() {
+		// ::comment when __CORE__
+		if (SecurityUtils.getSecurityProfile() == SecurityProfile.SANDBOX)
+			// In SANDBOX, we cannot read any URL
+			return false;
+
+		if (SecurityUtils.getSecurityProfile() == SecurityProfile.LEGACY)
+			return true;
+
+		if (SecurityUtils.getSecurityProfile() == SecurityProfile.UNSECURE)
+			// We are UNSECURE anyway
+			return true;
+
+		if (isInUrlAllowList())
+			// ::done
+			return true;
+		// ::comment when __CORE__
+
+		if (SecurityUtils.getSecurityProfile() == SecurityProfile.INTERNET) {
+			if (forbiddenURL(cleanPath(internal.toString())))
+				return false;
+
+			final int port = internal.getPort();
+			// Using INTERNET profile, port 80 and 443 are ok
+			return port == 80 || port == 443 || port == -1;
+		}
+		return false;
+		// ::done
+	}
+
+	// ::comment when __CORE__
+	/**
+	 * Regex to remove the UserInfo part from a URL.
+	 */
+	private static final Pattern PATTERN_USERINFO = Pattern.compile("(^https?://)([-_0-9a-zA-Z]+@)([^@]*)");
+
+	private static final ExecutorService EXE = Executors.newCachedThreadPool(new ThreadFactory() {
+		public Thread newThread(Runnable r) {
+			final Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setDaemon(true);
+			return t;
+		}
+	});
+
+	private static final Map<String, Long> BAD_HOSTS = new ConcurrentHashMap<String, Long>();
 
 	/**
 	 * Creates a URL without UserInfo part and without SecurityCredentials.
@@ -214,46 +291,21 @@ public class SURL {
 		return internal.toString();
 	}
 
-	/**
-	 * Check SecurityProfile to see if this URL can be opened.
-	 */
-	private boolean isUrlOk() {
-		if (SecurityUtils.getSecurityProfile() == SecurityProfile.SANDBOX)
-			// In SANDBOX, we cannot read any URL
-			return false;
-
-		if (SecurityUtils.getSecurityProfile() == SecurityProfile.LEGACY)
-			return true;
-
-		if (SecurityUtils.getSecurityProfile() == SecurityProfile.UNSECURE)
-			// We are UNSECURE anyway
-			return true;
-
-		if (isInAllowList())
-			return true;
-
-		if (SecurityUtils.getSecurityProfile() == SecurityProfile.INTERNET) {
-			if (forbiddenURL(cleanPath(internal.toString())))
-				return false;
-
-			final int port = internal.getPort();
-			// Using INTERNET profile, port 80 and 443 are ok
-			return port == 80 || port == 443 || port == -1;
-		}
-		return false;
-	}
-
 	private boolean forbiddenURL(String full) {
-		if (full.matches("^https?://\\d+\\.\\d+\\.\\d+\\.\\d+.*"))
+		if (full.startsWith("https://") == false && full.startsWith("http://") == false)
+			return true;
+		if (full.matches("^https?://[-#.0-9:\\[\\]+]+/.*"))
 			return true;
 		if (full.matches("^https?://[^.]+/.*"))
 			return true;
+		if (full.matches("^https?://[^.]+$"))
+			return true;
 		return false;
 	}
 
-	private boolean isInAllowList() {
+	private boolean isInUrlAllowList() {
 		final String full = cleanPath(internal.toString());
-		for (String allow : getAllowList())
+		for (String allow : getUrlAllowList())
 			if (full.startsWith(cleanPath(allow)))
 				return true;
 
@@ -271,8 +323,8 @@ public class SURL {
 		return path;
 	}
 
-	private List<String> getAllowList() {
-		final String env = SecurityUtils.getenv(SecurityUtils.PATHS_ALLOWED);
+	private List<String> getUrlAllowList() {
+		final String env = SecurityUtils.getenv(SecurityUtils.ALLOWLIST_URL);
 		if (env == null)
 			return Collections.emptyList();
 
@@ -409,7 +461,8 @@ public class SURL {
 	private static Callable<byte[]> requestWithGetAndResponse(final URL url, final Proxy proxy,
 			final SecurityAuthentication authentication, final Map<String, Object> headers) {
 		return new Callable<byte[]>() {
-			public byte[] call() throws IOException {
+
+			private HttpURLConnection openConnection(final URL url) throws IOException {
 				// Add proxy, if passed throw parameters
 				final URLConnection connection = proxy == null ? url.openConnection() : url.openConnection(proxy);
 				if (connection == null)
@@ -419,6 +472,18 @@ public class SURL {
 
 				applyEndpointAccessAuthentication(http, authentication);
 				applyAdditionalHeaders(http, headers);
+				return http;
+			}
+
+			public byte[] call() throws IOException {
+				HttpURLConnection http = openConnection(url);
+				final int responseCode = http.getResponseCode();
+
+				if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+						|| responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
+					final String newUrl = http.getHeaderField("Location");
+					http = openConnection(new URL(newUrl));
+				}
 
 				return retrieveResponseAsBytes(http);
 			}
@@ -475,7 +540,7 @@ public class SURL {
 			try {
 				return Charset.forName(matcher.group(1));
 			} catch (Exception e) {
-				e.printStackTrace();
+				Logme.error(e);
 			}
 
 		return null;
@@ -543,17 +608,6 @@ public class SURL {
 				return new ByteArrayInputStream(data);
 
 		}
-		return null;
-	}
-
-	public BufferedImage readRasterImageFromURL() {
-		if (isUrlOk())
-			try {
-				final ImageIcon tmp = new ImageIcon(internal);
-				return SecurityUtils.readRasterImage(tmp);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		return null;
 	}
 
@@ -639,4 +693,5 @@ public class SURL {
 
 		return url;
 	}
+	// ::done
 }

@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,15 +35,16 @@
  */
 package net.sourceforge.plantuml.command;
 
-import net.sourceforge.plantuml.command.regex.Matcher2;
-import net.sourceforge.plantuml.command.regex.MyPattern;
-import net.sourceforge.plantuml.command.regex.Pattern2;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.regex.Matcher2;
+import net.sourceforge.plantuml.regex.MyPattern;
+import net.sourceforge.plantuml.regex.Pattern2;
+import net.sourceforge.plantuml.utils.BlocLines;
 
 public abstract class CommandMultilines<S extends Diagram> implements Command<S> {
 
 	private final Pattern2 starting;
-	
+
 	public CommandMultilines(String patternStart) {
 		if (patternStart.startsWith("^") == false || patternStart.endsWith("$") == false) {
 			throw new IllegalArgumentException("Bad pattern " + patternStart);
@@ -58,31 +59,29 @@ public abstract class CommandMultilines<S extends Diagram> implements Command<S>
 	}
 
 	final public CommandControl isValid(BlocLines lines) {
-		if (isCommandForbidden()) {
+		if (isCommandForbidden())
 			return CommandControl.NOT_OK;
-		}
+
 		Matcher2 m1 = starting.matcher(lines.getFirst().getTrimmed().getString());
-		if (m1.matches() == false) {
+		if (m1.matches() == false)
 			return CommandControl.NOT_OK;
-		}
-		if (lines.size() == 1) {
+
+		if (lines.size() == 1)
 			return CommandControl.OK_PARTIAL;
-		}
 
 		m1 = MyPattern.cmpile(getPatternEnd()).matcher(lines.getLast().getTrimmed().getString());
-		if (m1.matches() == false) {
+		if (m1.matches() == false)
 			return CommandControl.OK_PARTIAL;
-		}
 
-		actionIfCommandValid();
-		return CommandControl.OK;
+		return finalVerification();
 	}
 
 	protected boolean isCommandForbidden() {
 		return false;
 	}
 
-	protected void actionIfCommandValid() {
+	protected CommandControl finalVerification() {
+		return CommandControl.OK;
 	}
 
 	protected final Pattern2 getStartingPattern() {

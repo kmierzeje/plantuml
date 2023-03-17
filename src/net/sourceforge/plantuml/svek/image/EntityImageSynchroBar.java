@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,67 +35,54 @@
  */
 package net.sourceforge.plantuml.svek.image;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.SkinParamUtils;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.cucadiagram.ILeaf;
-import net.sourceforge.plantuml.cucadiagram.Rankdir;
-import net.sourceforge.plantuml.graphic.StringBounder;
+import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.klimt.Shadowable;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.Rankdir;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.URectangle;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
-import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.svek.AbstractEntityImage;
 import net.sourceforge.plantuml.svek.ShapeType;
-import net.sourceforge.plantuml.ugraphic.Shadowable;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.URectangle;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.HColorNone;
 
 public class EntityImageSynchroBar extends AbstractEntityImage {
 
 	// private final SName styleName;
 
-	public EntityImageSynchroBar(ILeaf entity, ISkinParam skinParam, SName styleName) {
+	public EntityImageSynchroBar(Entity entity, ISkinParam skinParam, SName styleName) {
 		super(entity, skinParam);
 		// this.styleName = styleName;
 	}
 
-	public StyleSignature getDefaultStyleDefinitionBar() {
-		// return StyleSignature.of(SName.root, SName.element, styleName,
-		// SName.activityBar);
-		return StyleSignature.of(SName.root, SName.element, SName.activityBar);
+	private StyleSignatureBasic getStyleSignature() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.activityDiagram, SName.activityBar);
 	}
 
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
-		if (getSkinParam().getRankdir() == Rankdir.LEFT_TO_RIGHT) {
-			return new Dimension2DDouble(8, 80);
-		}
-		return new Dimension2DDouble(80, 8);
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
+		if (getSkinParam().getRankdir() == Rankdir.LEFT_TO_RIGHT)
+			return new XDimension2D(8, 80);
+
+		return new XDimension2D(80, 8);
 	}
 
 	final public void drawU(UGraphic ug) {
-		final Dimension2D dim = calculateDimension(ug.getStringBounder());
-		final Shadowable rect = new URectangle(dim.getWidth(), dim.getHeight());
-		double shadowing = 0;
-		if (getSkinParam().shadowing(getEntity().getStereotype())) {
-			shadowing = 4;
-		}
-		HColor color = SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.activityBar);
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getDefaultStyleDefinitionBar().with(getEntity().getStereotype())
-					.getMergedStyle(getSkinParam().getCurrentStyleBuilder());
-			color = style.value(PName.BackGroundColor).asColor(getSkinParam().getThemeStyle(),
-					getSkinParam().getIHtmlColorSet());
-			shadowing = style.value(PName.Shadowing).asDouble();
-		}
+		final XDimension2D dim = calculateDimension(ug.getStringBounder());
+		final Shadowable rect = URectangle.build(dim.getWidth(), dim.getHeight());
+
+		final Style style = getStyleSignature().withTOBECHANGED(getEntity().getStereotype())
+				.getMergedStyle(getSkinParam().getCurrentStyleBuilder());
+		final HColor color = style.value(PName.BackGroundColor).asColor(getSkinParam().getIHtmlColorSet());
+		final double shadowing = style.value(PName.Shadowing).asDouble();
+
 		rect.setDeltaShadow(shadowing);
-		ug.apply(new HColorNone()).apply(color.bg()).draw(rect);
+		ug.apply(HColors.none()).apply(color.bg()).draw(rect);
 	}
 
 	public ShapeType getShapeType() {

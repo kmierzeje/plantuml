@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,14 +35,13 @@
  */
 package net.sourceforge.plantuml.donors;
 
-import java.awt.geom.Dimension2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import net.sourceforge.plantuml.BackSlash;
+import net.atmp.PixelImage;
 import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.PlainDiagram;
 import net.sourceforge.plantuml.code.AsciiEncoder;
@@ -53,47 +52,49 @@ import net.sourceforge.plantuml.code.Transcoder;
 import net.sourceforge.plantuml.code.TranscoderImpl;
 import net.sourceforge.plantuml.core.DiagramDescription;
 import net.sourceforge.plantuml.core.UmlSource;
-import net.sourceforge.plantuml.graphic.GraphicStrings;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.UDrawable;
-import net.sourceforge.plantuml.svek.TextBlockBackcolored;
-import net.sourceforge.plantuml.ugraphic.AffineTransformType;
-import net.sourceforge.plantuml.ugraphic.PixelImage;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.UImage;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
+import net.sourceforge.plantuml.klimt.AffineTransformType;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.GraphicStrings;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.UDrawable;
+import net.sourceforge.plantuml.klimt.shape.UImage;
+import net.sourceforge.plantuml.log.Logme;
+import net.sourceforge.plantuml.text.BackSlash;
 import net.sourceforge.plantuml.version.PSystemVersion;
 
 public class PSystemDonors extends PlainDiagram {
+	// ::remove file when __CORE__
 
 	private static final int COLS = 6;
 	private static final int FREE_LINES = 6;
 
-	public static final String DONORS = "6t4E03mSS7Dt1Og5J5Uh3hcJits4ZufNcNRmsK-DFu8Mfx004WGrllMtt9JI0K46z1ewUipjEptkDz9V"
-			+ "H5UwzqqpHgtN9kKCeleWw07lRWljG-b_VH3cB7aHt9aIN40AYEBeOlcHRkGuVL9bI2baDAVOxcLYNg-G"
-			+ "IYa-V-KZz1F8fg3pd6aKYPeNE3rg-odslkRdrrnTGomKo_C49L3IPKAwwSFSckbxFssauoVm-wH15OkY"
-			+ "BTsMh94s7MFUrxK07TEkrN8c7qrgLiMugaYnZauQLf5CQCl5v7FaHPyq_gWtuIFgaI4PTGLqbjNHzNDl"
-			+ "NzyJyoyNVSJ957n3KGCZO3soDj7YFFIWOUA0eMKNnTYgmf4dwP38WnRouH-5AOoKd5q6Dmsp1a1OlGCL"
-			+ "H79GcnhETXm6L9bYYxuGRhhKtrWwxyjAgK9N6fv9RCnCr0Ah58aDkg4xSzs-cger0XoHdXAriFKed-FO"
-			+ "Ip-iw9jUIWJhQ-kqBC5VKSekfQRZzftgTvyIm17IyfqFOufGJg0fWocKyMi56LUXkzQ2BJgkSh2G1b4V"
-			+ "jxZfm-R6GoiY79Cf5MeTlupjL2lyeSiMR4p2as1nlwTzARM0Gqssgj82-4AhaXuxNq0o5BmSzFYEl-yT"
-			+ "hgcK96z8j17EaFJRysn7CnO2T6mPiw6RAR0OTrdLMsn1X7gKZWxGMaW6uMnkbxtP1-aZFm7m5XAYsstY"
-			+ "Q0T_VcdAr96BD97GJMci05QVLjHDm-8H36er5TsCAS7qDivnfLjZ7okELSkYJPwt6eo9twZJ51lBPIeo"
-			+ "tR1I3sykVCUsbtOfxfCnU7MxJ_Qw2cWfzvvouzulCX3dQZ9GAJBTyUvllcMPGLZCuf_h5PIUDNjoyz2T"
-			+ "mNOMYvOnivMfXwm01eUILEiZqLX2ZFIsGxR0hute4K1-ZICbU9YH1wyVIwwfvfY6oIQBwDaYHBQrUSNU"
-			+ "sPNpW3qlVv8ZeqJAnLUFGa9-nyOYebNMHcd3vdnNu1btYgAyd7VFgYVuLmrJ5r2TAWg2qeArIaBxwlK0"
-			+ "6RftrhFKaZZZ5ISMbBqk1uO4fLUYQEl13O0fD3D4yC304s4WAsMNDZ4YyDqVTvldBdMenzy-xM8S8jqb"
-			+ "2L05X5DUK4qqM4U48-ij_l-vTuET-FD_hMcJKxkzzps4q1D8242u5neoBW0XdW9V7pRC0Pp2aX2T95ov"
-			+ "Qkrv88h1JiPW5tNxCgDoutUMcv6Rrbu_LEMfAKM5atuW-qKmQAzpIPNkGz2fx77V-KQuoC7O_YMgp4fn"
-			+ "xogZxPMHy4aeulYEqyi1pLWOe0Phe8u2_-x-h2pKDDP-HL9vE03vPaDIgPckHTMMriP6OAESsDzRirFE"
-			+ "pC_Am3wxrONpgXxQ9Ybkf1XH-DOfBiy84pE9f8a8Ta_9YGSZVED1lgWMIs9fMxkTCLWX_sC_XZSI3jaX"
-			+ "3JJgCQKytO0SjadtiLMWFuZt41x8mcATxYmMIoKyaY8fdAjO9ZAaJxGPv_O6CIWAn__t5fGhJ3G_eTcb"
-			+ "TdQIkNHhDoaWyg7-pf9Qv6ojoC2-g-QopSjp-zOc4-pO_y2Fdsz_LDry4m4uegiIl6utyk765jKLR45v"
-			+ "iuJxk2pMpUINSIdQ9Qg1pVlEHWsm6Iga98A81w12U8txDVq9Myu5yktrbxamKiFpU3NqpAUx0ol8DXfU"
-			+ "9GsgNcHnR7s_vIRl7CYSU6nmOPMnqyES7YqprBQRDbl8e9AuSyLOps1sZv8gdygOLChGL8qDDKjYwxAp"
-			+ "7Ps1yItaYlMzVMjZXfJw1VEPu1H3JKal3MG20Lb4Ke21v2hPhrfnXepCj4gynSfMqZ3LJMfej1iiYZjB" + "Ms7pORCrtdviIo40";
-
+	public static final String DONORS = "6r8F0AoFktsyGOBPua5wjfPR-fZcX3WHBCyJYiF0HZpT1SGVuDxfSR-H_YAwqhrlcZ5glPofDGbvnfSS"
+			+ "iFHQuIQCt_d2eyvUFWIVD0A61iW0SLF_nZdioMcw8rM6bE3DT-Z-bidQawtZOb7pEH6u2g0IqPnYkvU9"
+			+ "URr2AgNu_9MFq4yWcuBESwPH96fUuEQexQVO-vhxdpexbp1BToim0gEY4QhylkPOUxarxw9QL8c2dQ0A"
+			+ "TepbL5gr7AgeZ2tBoCS-CD6QGpwgrAoACHUHOXYTD0mY4QZBnUXZvCMOL7wfD-73TLL8Hjq1dMqDT7tJ"
+			+ "sZRFnFJpHH-XqWRVOAJ025YEn4sqV1v6KD5oG52pYsniKUN8apXGf48B_kKFXQcCafnT0JKLdGP067m7"
+			+ "AeXafperd6qw3AYmn1Pj5guwrzzO6k_BybIc2mrF83Ow9bg1LOBy3xh1EsiTZqIrXq4HwIdH6BOSvNCe"
+			+ "M-c75NrkrX910g1Jit1_-IYdahgEurdxTwu5uB2qVDV37CET4sZA4gh8-6X1nXNehBKWYzwx72oaGDZ7"
+			+ "uPinTAuyj2p2DfvI5clxPMnxBVE7hhJ1-iGy1HR-FVPBhWKSQj9LaXR05rg5TEjyef2M-VVIuzj_tnEk"
+			+ "AUIurotw25T8-kt7sCnO2D2-PKX3Dq4W2TobLMkn1H7g4TetG6iX6OHpf5ts4R-aZ_m4m5kM4CDX4qez"
+			+ "-FDBKQQENAW93rsLnWfWQR6YRIfwZs1GgYdeObHnPRJnuolJEljODfOiYpvvNcem9dvDfoWsbYjKP8PX"
+			+ "eHxHdFcsjfLs2MwNCNZLVM9b5T1QuJtanhrVP22VUyX49EyCnti-SiioJKZCufZhPKhF-cHoyz2D2yxi"
+			+ "fYSpofH3bW6TtSberaUiiLbCVpF8PkIridWCO7mDHLlmCACOl7uqEQQQOofQcooYOeiGITRc5RkOS1P1"
+			+ "dfOZoL5HGkKMgriX8RzjOn6HAd6Zr65pkZFm3EzHb9VppbdrcB_TIie2AbERm2KjIAkbOj-pBf2XUoSz"
+			+ "Kos9C_vzOi6sz-M1mQ7qYecM7jm0c4AIBZ8F128HEWgbz58cXWM-xhUxrUDp7TBnjq-d68T83qa2L073"
+			+ "sLvGZTJPHeIDzHh_VzEd9Ixy-TUwRPDJlRtttONGE4WMW0WlDAIS4q8y1JutDam6dCAIB3f9k7BMqek1"
+			+ "o8ADZC4kwcoPqNRZ9ykDo4rlBn-gyAUhN5JOwGTqNBXIx7qkgJ9zCOEAsRxnZSL53W7_4bL6PNBlAgDP"
+			+ "OIJYA6HnxCVfRKFJ5pf8mHgeJU3OtUyj5XgQQxyYgJGSW7oo8QdKhD2YQarBOoEmKaxixwquAMVMPsUY"
+			+ "7zCwSrxLGzqaPzTJZ2Xy-oaqzmWJqqNSX8LmJyv934Rune9yKIsMnDAo3ZjDi8B_-tuCRoHiieCF5Ee9"
+			+ "fJpJWXnXa-nzgoZ-8DvTn40M5ijq9x5Ool58YgHmhcoPd25zfKyufMyGWw9m_7ylGRZCHFCLaYwzgvFC"
+			+ "vRTMamoYEDJF9Ab5obQB3EoRIovRl2AtRMtIOTl-1txYVFaZwkAR220GpONWDQUX3pVMgwbX2_ARETp7"
+			+ "PRPk9Z-FIz7EKGbirYSRDS1cgE991647e49u3VrL_GbRpcNus_DKAepKyDnH3JruhWQMaQqql4WQrBp8"
+			+ "OjhwVifDdXn8d00TKAawZPqUneneXKCjlscp98DAuauL_ti6qjqbLTwgc3JAaAXwWysIs3hlpD3fdDmg"
+			+ "N5xFyVJ632dr2-eBWZs6kbpF3NW20meXhW05oLNpljMACsHKbbNZmoeKHWws5JKqsWmMsHtZqr0shvYj"
+			+ "yUpO5i08L0pzWmjxZuP6JgXesUQ4CXiH1ObIQ0ieiySejc6VaYvkEJMTj_PENUY7pPDDDVeMbUB0EZoZ" + "yWe1";
 	/*
 	 * Special thanks to our sponsors and donors:
 	 * 
@@ -109,7 +110,7 @@ public class PSystemDonors extends PlainDiagram {
 		final List<TextBlock> cols = getCols(getDonors(), COLS, FREE_LINES);
 		return new UDrawable() {
 			public void drawU(UGraphic ug) {
-				final TextBlockBackcolored header = GraphicStrings
+				final TextBlock header = GraphicStrings
 						.createBlackOnWhite(Arrays.asList("<b>Special thanks to our sponsors and donors !"));
 				header.drawU(ug);
 				final StringBounder stringBounder = ug.getStringBounder();
@@ -118,7 +119,7 @@ public class PSystemDonors extends PlainDiagram {
 				double lastX = 0;
 				double y = 0;
 				for (TextBlock tb : cols) {
-					final Dimension2D dim = tb.calculateDimension(stringBounder);
+					final XDimension2D dim = tb.calculateDimension(stringBounder);
 					tb.drawU(ug.apply(UTranslate.dx(x)));
 					lastX = x;
 					x += dim.getWidth() + 10;
@@ -143,6 +144,7 @@ public class PSystemDonors extends PlainDiagram {
 
 	private List<String> getDonors() throws IOException {
 		final List<String> lines = new ArrayList<>();
+		// ::comment when __CORE__
 		final Transcoder t = TranscoderImpl.utf8(new AsciiEncoder(), new StringCompressorNone(),
 				new CompressionBrotli());
 		try {
@@ -152,8 +154,9 @@ public class PSystemDonors extends PlainDiagram {
 				lines.add(st.nextToken());
 			}
 		} catch (NoPlantumlCompressionException e) {
-			e.printStackTrace();
+			Logme.error(e);
 		}
+		// ::done
 		return lines;
 	}
 

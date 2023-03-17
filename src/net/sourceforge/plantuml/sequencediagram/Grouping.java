@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,15 +35,15 @@
  */
 package net.sourceforge.plantuml.sequencediagram;
 
+import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleBuilder;
-import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.style.WithStyle;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
 
-public abstract class Grouping implements Event, WithStyle {
+public abstract class Grouping extends AbstractEvent implements Event, WithStyle {
 
 	private final String title;
 	private final GroupingType type;
@@ -55,19 +55,18 @@ public abstract class Grouping implements Event, WithStyle {
 	final private Style style;
 	final private Style styleHeader;
 
-	public StyleSignature getDefaultStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.sequenceDiagram, SName.group);
+	public StyleSignatureBasic getStyleSignature() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.sequenceDiagram, SName.group);
 	}
 
-	private StyleSignature getHeaderStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.sequenceDiagram, SName.groupHeader);
+	private StyleSignatureBasic getHeaderStyleDefinition() {
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.sequenceDiagram, SName.groupHeader);
 	}
 
 	public Style[] getUsedStyles() {
 		return new Style[] {
-				style,
-				styleHeader == null ? styleHeader : styleHeader.eventuallyOverride(PName.BackGroundColor,
-						backColorElement) };
+				style == null ? null : style.eventuallyOverride(PName.BackGroundColor, getBackColorGeneral()),
+				styleHeader == null ? null : styleHeader.eventuallyOverride(PName.BackGroundColor, backColorElement) };
 	}
 
 	public Grouping(String title, String comment, GroupingType type, HColor backColorElement,
@@ -77,7 +76,7 @@ public abstract class Grouping implements Event, WithStyle {
 		this.comment = comment;
 		this.type = type;
 		this.backColorElement = backColorElement;
-		this.style = getDefaultStyleDefinition().getMergedStyle(styleBuilder);
+		this.style = getStyleSignature().getMergedStyle(styleBuilder);
 		this.styleHeader = getHeaderStyleDefinition().getMergedStyle(styleBuilder);
 	}
 

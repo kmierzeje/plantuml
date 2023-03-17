@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,21 +35,22 @@
  */
 package net.sourceforge.plantuml.activitydiagram3;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import net.sourceforge.plantuml.ISkinSimple;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandActivity3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandActivityLegacy1;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandActivityLong3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandArrow3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandArrowLong3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandBackward3;
+import net.sourceforge.plantuml.activitydiagram3.command.CommandBackwardLong3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandBreak;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandCase;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandCircleSpot3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandElse3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandElseIf2;
+import net.sourceforge.plantuml.activitydiagram3.command.CommandElseIf3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandElseLegacy1;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandEnd3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandEndPartition3;
@@ -59,7 +60,6 @@ import net.sourceforge.plantuml.activitydiagram3.command.CommandFork3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandForkAgain3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandForkEnd3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandGoto;
-import net.sourceforge.plantuml.activitydiagram3.command.CommandGroup3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandGroupEnd3;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandIf2;
 import net.sourceforge.plantuml.activitydiagram3.command.CommandIf4;
@@ -86,23 +86,23 @@ import net.sourceforge.plantuml.activitydiagram3.command.CommandWhileEnd3;
 import net.sourceforge.plantuml.command.Command;
 import net.sourceforge.plantuml.command.CommandDecoratorMultine;
 import net.sourceforge.plantuml.command.CommandFootboxIgnored;
+import net.sourceforge.plantuml.command.CommonCommands;
 import net.sourceforge.plantuml.command.PSystemCommandFactory;
 import net.sourceforge.plantuml.core.UmlSource;
 
 public class ActivityDiagramFactory3 extends PSystemCommandFactory {
 
 	@Override
-	protected List<Command> createCommands() {
+	protected void initCommandsList(List<Command> cmds) {
 
-		final List<Command> cmds = new ArrayList<>();
 		cmds.add(new CommandFootboxIgnored());
 
-		addCommonCommands1(cmds);
+		CommonCommands.addCommonCommands1(cmds);
 		cmds.add(new CommandSwimlane());
 		cmds.add(new CommandSwimlane2());
 		cmds.add(new CommandPartition3());
 		cmds.add(new CommandEndPartition3());
-		cmds.add(new CommandGroup3());
+		// cmds.add(new CommandGroup3());
 		cmds.add(new CommandGroupEnd3());
 		cmds.add(new CommandArrow3());
 		cmds.add(new CommandArrowLong3());
@@ -110,11 +110,12 @@ public class ActivityDiagramFactory3 extends PSystemCommandFactory {
 		cmds.add(new CommandActivity3());
 		cmds.add(new CommandIf4());
 		cmds.add(new CommandIf2());
-		cmds.add(new CommandDecoratorMultine(new CommandIf2(), 50));
+		cmds.add(CommandDecoratorMultine.create(new CommandIf2(), 50));
 		cmds.add(new CommandIfLegacy1());
+		cmds.add(new CommandElseIf3());
 		cmds.add(new CommandElseIf2());
 		cmds.add(new CommandElse3());
-		cmds.add(new CommandDecoratorMultine(new CommandElse3(), 50));
+		cmds.add(CommandDecoratorMultine.create(new CommandElse3(), 50));
 		cmds.add(new CommandElseLegacy1());
 		cmds.add(new CommandEndif3());
 
@@ -125,13 +126,14 @@ public class ActivityDiagramFactory3 extends PSystemCommandFactory {
 		cmds.add(new CommandRepeatWhile3());
 		cmds.add(new CommandRepeatWhile3Multilines());
 		cmds.add(new CommandBackward3());
+		cmds.add(new CommandBackwardLong3());
 		cmds.add(new CommandWhile3());
 		cmds.add(new CommandWhileEnd3());
-		
+
 		cmds.add(new CommandFork3());
 		cmds.add(new CommandForkAgain3());
 		cmds.add(new CommandForkEnd3());
-		
+
 		cmds.add(new CommandSplit3());
 		cmds.add(new CommandSplitAgain3());
 		cmds.add(new CommandSplitEnd3());
@@ -152,13 +154,11 @@ public class ActivityDiagramFactory3 extends PSystemCommandFactory {
 
 		cmds.add(new CommandLabel());
 		cmds.add(new CommandGoto());
-		cmds.add(new CommandDecoratorMultine(new CommandElseIf2(), 50));
-
-		return cmds;
+		cmds.add(CommandDecoratorMultine.create(new CommandElseIf2(), 50));
 	}
 
 	@Override
-	public ActivityDiagram3 createEmptyDiagram(UmlSource source, ISkinSimple skinParam) {
+	public ActivityDiagram3 createEmptyDiagram(UmlSource source, Map<String, String> skinParam) {
 		return new ActivityDiagram3(source, skinParam);
 	}
 

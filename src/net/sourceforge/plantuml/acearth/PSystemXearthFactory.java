@@ -2,15 +2,15 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
- * 
+ * Project Info:  https://plantuml.com
+ *
  * If you like this project or if you find it useful, you can support us at:
- * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
- * 
+ *
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
+ *
  * This file is part of PlantUML.
  *
  * PlantUML is free software; you can redistribute it and/or modify it
@@ -30,7 +30,7 @@
  *
  *
  * Original Author:  Arnaud Roques
- * 
+ *
  *
  */
 package net.sourceforge.plantuml.acearth;
@@ -42,14 +42,16 @@ import java.util.Map;
 
 import ext.plantuml.com.ctreber.acearth.plugins.markers.Marker;
 import net.sourceforge.plantuml.command.PSystemBasicFactory;
-import net.sourceforge.plantuml.command.regex.Matcher2;
-import net.sourceforge.plantuml.command.regex.MyPattern;
-import net.sourceforge.plantuml.command.regex.Pattern2;
 import net.sourceforge.plantuml.core.UmlSource;
+import net.sourceforge.plantuml.log.Logme;
+import net.sourceforge.plantuml.regex.Matcher2;
+import net.sourceforge.plantuml.regex.MyPattern;
+import net.sourceforge.plantuml.regex.Pattern2;
 
 public class PSystemXearthFactory extends PSystemBasicFactory<PSystemXearth> {
+    // ::remove folder when __HAXE__
 
-	private final Map<String, String> config = new LinkedHashMap<String, String>();
+	private final Map<String, String> config = new LinkedHashMap<>();
 	private final List<Marker> markers = new ArrayList<>();
 	private int width;
 	private int height;
@@ -80,12 +82,12 @@ public class PSystemXearthFactory extends PSystemBasicFactory<PSystemXearth> {
 			system = new PSystemXearth(source, width, height, config, markers);
 			return system;
 		}
-		if (system == null) {
+		if (system == null)
 			return null;
-		}
-		if (line.startsWith("#") || line.startsWith("'")) {
+
+		if (line.startsWith("#") || line.startsWith("'"))
 			return system;
-		}
+
 		final Pattern2 p = MyPattern.cmpile("(\\w+)[%s]*=[%s]*(.*)");
 		final Matcher2 m = p.matcher(line);
 		if (m.find()) {
@@ -99,7 +101,7 @@ public class PSystemXearthFactory extends PSystemBasicFactory<PSystemXearth> {
 				return system;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logme.error(e);
 			return null;
 		}
 		return null;

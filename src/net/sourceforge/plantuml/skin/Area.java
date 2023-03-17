@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,13 +35,12 @@
  */
 package net.sourceforge.plantuml.skin;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.Dimension2DDouble;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
 
 public class Area {
+    // ::remove folder when __HAXE__
 
-	private final Dimension2D dimensionToUse;
+	private final XDimension2D dimensionToUse;
 	private double deltaX1;
 
 	@Override
@@ -49,15 +48,15 @@ public class Area {
 		return dimensionToUse.toString() + " (" + deltaX1 + ")";
 	}
 
-	public Area(Dimension2D dimensionToUse) {
+	public Area(XDimension2D dimensionToUse) {
 		this.dimensionToUse = dimensionToUse;
 	}
 
-	public Area(double with, double height) {
-		this(new Dimension2DDouble(with, height));
+	public static Area create(double with, double height) {
+		return new Area(new XDimension2D(with, height));
 	}
 
-	public Dimension2D getDimensionToUse() {
+	public XDimension2D getDimensionToUse() {
 		return dimensionToUse;
 	}
 

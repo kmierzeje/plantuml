@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,36 +35,31 @@
  */
 package net.sourceforge.plantuml.svek.image;
 
-import java.awt.geom.Dimension2D;
-
-import net.sourceforge.plantuml.ColorParam;
-import net.sourceforge.plantuml.Dimension2DDouble;
-import net.sourceforge.plantuml.FontParam;
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.SkinParamUtils;
-import net.sourceforge.plantuml.Url;
-import net.sourceforge.plantuml.UseStyle;
-import net.sourceforge.plantuml.cucadiagram.ILeaf;
-import net.sourceforge.plantuml.cucadiagram.Stereotype;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.graphic.color.ColorType;
+import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.klimt.Shadowable;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.URectangle;
+import net.sourceforge.plantuml.stereo.Stereotype;
+import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.style.StyleSignature;
+import net.sourceforge.plantuml.style.StyleSignatureBasic;
 import net.sourceforge.plantuml.svek.AbstractEntityImage;
 import net.sourceforge.plantuml.svek.Bibliotekon;
 import net.sourceforge.plantuml.svek.ShapeType;
 import net.sourceforge.plantuml.svek.SvekNode;
-import net.sourceforge.plantuml.ugraphic.Shadowable;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.URectangle;
-import net.sourceforge.plantuml.ugraphic.UStroke;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
+import net.sourceforge.plantuml.url.Url;
 
 public class EntityImageActivity extends AbstractEntityImage {
 
@@ -75,59 +70,49 @@ public class EntityImageActivity extends AbstractEntityImage {
 	final private Url url;
 	private final Bibliotekon bibliotekon;
 
-	public EntityImageActivity(ILeaf entity, ISkinParam skinParam, Bibliotekon bibliotekon) {
+	public EntityImageActivity(Entity entity, ISkinParam skinParam, Bibliotekon bibliotekon) {
 		super(entity, skinParam);
 		this.bibliotekon = bibliotekon;
-		final Stereotype stereotype = entity.getStereotype();
 
-		final FontConfiguration fontConfiguration;
-		final HorizontalAlignment horizontalAlignment;
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getDefaultStyleDefinition().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
-			fontConfiguration = style.getFontConfiguration(skinParam.getThemeStyle(), skinParam.getIHtmlColorSet());
-			horizontalAlignment = style.getHorizontalAlignment();
-			shadowing = style.value(PName.Shadowing).asDouble();
-		} else {
-			fontConfiguration = new FontConfiguration(getSkinParam(), FontParam.ACTIVITY, stereotype);
-			horizontalAlignment = HorizontalAlignment.CENTER;
-			if (getSkinParam().shadowing(getEntity().getStereotype())) {
-				shadowing = 4;
-			}
-		}
+		final Style style = getDefaultStyleDefinition().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
+		final FontConfiguration fontConfiguration = style.getFontConfiguration(skinParam.getIHtmlColorSet());
+		final HorizontalAlignment horizontalAlignment = style.getHorizontalAlignment();
+		this.shadowing = style.value(PName.Shadowing).asDouble();
+
 		this.desc = entity.getDisplay().create(fontConfiguration, horizontalAlignment, skinParam);
 		this.url = entity.getUrl99();
 	}
 
-	public Dimension2D calculateDimension(StringBounder stringBounder) {
-		final Dimension2D dim = desc.calculateDimension(stringBounder);
-		return Dimension2DDouble.delta(dim, MARGIN * 2);
+	public XDimension2D calculateDimension(StringBounder stringBounder) {
+		final XDimension2D dim = desc.calculateDimension(stringBounder);
+		return dim.delta(MARGIN * 2);
 	}
 
 	final public void drawU(UGraphic ug) {
-		if (url != null) {
+		if (url != null)
 			ug.startUrl(url);
-		}
-		if (getShapeType() == ShapeType.ROUND_RECTANGLE) {
+
+		if (getShapeType() == ShapeType.ROUND_RECTANGLE)
 			ug = drawNormal(ug);
-		} else if (getShapeType() == ShapeType.OCTAGON) {
+		else if (getShapeType() == ShapeType.OCTAGON)
 			ug = drawOctagon(ug);
-		} else {
+		else
 			throw new UnsupportedOperationException();
-		}
-		if (url != null) {
+
+		if (url != null)
 			ug.closeUrl();
-		}
+
 	}
 
 	private UGraphic drawOctagon(UGraphic ug) {
 		final SvekNode node = bibliotekon.getNode(getEntity());
 		final Shadowable octagon = node.getPolygon();
-		if (octagon == null) {
+		if (octagon == null)
 			return drawNormal(ug);
-		}
+
 		octagon.setDeltaShadow(shadowing);
 		ug = applyColors(ug);
-		ug.apply(new UStroke(1.5)).draw(octagon);
+		ug.apply(UStroke.withThickness(1.5)).draw(octagon);
 		desc.drawU(ug.apply(new UTranslate(MARGIN, MARGIN)));
 		return ug;
 
@@ -135,19 +120,18 @@ public class EntityImageActivity extends AbstractEntityImage {
 
 	private UGraphic drawNormal(UGraphic ug) {
 		final StringBounder stringBounder = ug.getStringBounder();
-		final Dimension2D dimTotal = calculateDimension(stringBounder);
+		final XDimension2D dimTotal = calculateDimension(stringBounder);
 
 		final double widthTotal = dimTotal.getWidth();
 		final double heightTotal = dimTotal.getHeight();
-		final Shadowable rect = new URectangle(widthTotal, heightTotal).rounded(CORNER);
+		final Shadowable rect = URectangle.build(widthTotal, heightTotal).rounded(CORNER);
 		rect.setDeltaShadow(shadowing);
 
 		ug = applyColors(ug);
-		UStroke stroke = new UStroke(1.5);
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getDefaultStyleDefinition().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
-			stroke = style.getStroke();
-		}
+
+		final Style style = getDefaultStyleDefinition().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
+		final UStroke stroke = style.getStroke();
+
 		ug.apply(stroke).draw(rect);
 
 		desc.drawU(ug.apply(new UTranslate(MARGIN, MARGIN)));
@@ -155,26 +139,18 @@ public class EntityImageActivity extends AbstractEntityImage {
 	}
 
 	public StyleSignature getDefaultStyleDefinition() {
-		return StyleSignature.of(SName.root, SName.element, SName.activityDiagram, SName.activity).with(getStereo());
+		return StyleSignatureBasic.of(SName.root, SName.element, SName.activityDiagram, SName.activity)
+				.withTOBECHANGED(getStereo());
 	}
 
 	private UGraphic applyColors(UGraphic ug) {
-		HColor borderColor = SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.activityBorder);
-		HColor backcolor = getEntity().getColors().getColor(ColorType.BACK);
-		if (backcolor == null) {
-			backcolor = SkinParamUtils.getColor(getSkinParam(), getStereo(), ColorParam.activityBackground);
-		}
 
-		if (UseStyle.useBetaStyle()) {
-			final Style style = getDefaultStyleDefinition().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
-			borderColor = style.value(PName.LineColor).asColor(getSkinParam().getThemeStyle(),
-					getSkinParam().getIHtmlColorSet());
-			backcolor = getEntity().getColors().getColor(ColorType.BACK);
-			if (backcolor == null) {
-				backcolor = style.value(PName.BackGroundColor).asColor(getSkinParam().getThemeStyle(),
-						getSkinParam().getIHtmlColorSet());
-			}
-		}
+		final Style style = getDefaultStyleDefinition().getMergedStyle(getSkinParam().getCurrentStyleBuilder());
+		final HColor borderColor = style.value(PName.LineColor).asColor(getSkinParam().getIHtmlColorSet());
+		HColor backcolor = getEntity().getColors().getColor(ColorType.BACK);
+		if (backcolor == null)
+			backcolor = style.value(PName.BackGroundColor).asColor(getSkinParam().getIHtmlColorSet());
+
 		ug = ug.apply(borderColor);
 		ug = ug.apply(backcolor.bg());
 		return ug;
@@ -182,9 +158,9 @@ public class EntityImageActivity extends AbstractEntityImage {
 
 	public ShapeType getShapeType() {
 		final Stereotype stereotype = getStereo();
-		if (getSkinParam().useOctagonForActivity(stereotype)) {
+		if (getSkinParam().useOctagonForActivity(stereotype))
 			return ShapeType.OCTAGON;
-		}
+
 		return ShapeType.ROUND_RECTANGLE;
 	}
 

@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -57,34 +57,42 @@ import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.ErrorUml;
 import net.sourceforge.plantuml.FileFormat;
 import net.sourceforge.plantuml.FileFormatOption;
-import net.sourceforge.plantuml.LineLocationImpl;
 import net.sourceforge.plantuml.Option;
 import net.sourceforge.plantuml.SourceStringReader;
-import net.sourceforge.plantuml.StringLocated;
 import net.sourceforge.plantuml.StringUtils;
 import net.sourceforge.plantuml.code.Transcoder;
 import net.sourceforge.plantuml.code.TranscoderUtil;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.core.ImageData;
+import net.sourceforge.plantuml.eggs.QuoteUtils;
 import net.sourceforge.plantuml.error.PSystemError;
 import net.sourceforge.plantuml.error.PSystemErrorUtils;
-import net.sourceforge.plantuml.graphic.QuoteUtils;
+import net.sourceforge.plantuml.json.Json;
+import net.sourceforge.plantuml.json.JsonArray;
+import net.sourceforge.plantuml.json.JsonObject;
+import net.sourceforge.plantuml.log.Logme;
 import net.sourceforge.plantuml.security.SFile;
+import net.sourceforge.plantuml.text.StringLocated;
+import net.sourceforge.plantuml.utils.LineLocationImpl;
 import net.sourceforge.plantuml.version.Version;
 
 public class PicoWebServer implements Runnable {
+	// ::remove folder when __CORE__
 
 	private final Socket connect;
+	private static boolean enableStop;
 
 	public PicoWebServer(Socket c) {
 		this.connect = c;
 	}
 
 	public static void main(String[] args) throws IOException {
-		startServer(8080, null);
+		startServer(8080, null, false);
 	}
 
-	public static void startServer(final int port, final String bindAddress) throws IOException {
+	public static void startServer(final int port, final String bindAddress, final boolean argEnableStop)
+			throws IOException {
+		PicoWebServer.enableStop = argEnableStop;
 		final InetAddress bindAddress1 = bindAddress == null ? null : InetAddress.getByName(bindAddress);
 		final ServerSocket serverConnect = new ServerSocket(port, 50, bindAddress1);
 		System.err.println("webPort=" + serverConnect.getLocalPort());
@@ -125,6 +133,14 @@ public class PicoWebServer implements Runnable {
 					return;
 				if (request.getPath().startsWith("/plantuml/utxt/") && handleGET(request, out, FileFormat.UTXT))
 					return;
+				if (request.getPath().startsWith("/serverinfo") && handleInfo(out))
+					return;
+				if (request.getPath().startsWith("/plantuml/serverinfo") && handleInfo(out))
+					return;
+				if (enableStop && (request.getPath().startsWith("/stopserver")
+						|| request.getPath().startsWith("/plantuml/stopserver")) && handleStop(out))
+					return;
+
 			} else if (request.getMethod().equals("POST") && request.getPath().equals("/render")) {
 				handleRenderRequest(request, out);
 				return;
@@ -138,7 +154,7 @@ public class PicoWebServer implements Runnable {
 			try {
 				sendError(e, out);
 			} catch (Throwable e1) {
-				e.printStackTrace();
+				Logme.error(e);
 			}
 		} finally {
 			try {
@@ -146,9 +162,58 @@ public class PicoWebServer implements Runnable {
 				out.close();
 				connect.close();
 			} catch (Throwable e) {
-				e.printStackTrace();
+				Logme.error(e);
 			}
 		}
+	}
+
+	private boolean handleStop(BufferedOutputStream out) throws IOException {
+		write(out, "HTTP/1.1 " + "200");
+		write(out, "Cache-Control: no-cache");
+		write(out, "Server: PlantUML PicoWebServer " + Version.versionString());
+		write(out, "Date: " + new Date());
+		write(out, "");
+
+		write(out, "<html>Stoping...</html>");
+
+		out.flush();
+
+		final Thread stop = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(3000L);
+				} catch (InterruptedException e) {
+				}
+				System.exit(0);
+			}
+		});
+		stop.start();
+
+		return true;
+	}
+
+	private boolean handleInfo(BufferedOutputStream out) throws IOException {
+		write(out, "HTTP/1.1 " + "200");
+		write(out, "Cache-Control: no-cache");
+		write(out, "Server: PlantUML PicoWebServer " + Version.versionString());
+		write(out, "Date: " + new Date());
+		write(out, "Content-Type: application/json");
+		write(out, "");
+
+		final JsonArray formats = new JsonArray();
+		formats.add("png");
+		formats.add("svg");
+		formats.add("txt");
+		final JsonObject json = Json.object() //
+				.add("version", Version.versionString()) //
+				.add("PicoWebServer", true) //
+				.add("formats", formats); //
+		write(out, json.toString());
+
+		out.flush();
+
+		return true;
 	}
 
 	private boolean handleGET(ReceivedHTTPRequest request, BufferedOutputStream out, final FileFormat format)
@@ -159,9 +224,9 @@ public class PicoWebServer implements Runnable {
 		final String source = transcoder.decode(compressed);
 		final SourceStringReader ssr = new SourceStringReader(source);
 
+		final FileFormatOption fileFormatOption = new FileFormatOption(format);
 		final List<BlockUml> blocks = ssr.getBlocks();
 		if (blocks.size() > 0) {
-			final FileFormatOption fileFormatOption = new FileFormatOption(format);
 			final Diagram system = blocks.get(0).getDiagram();
 			final ByteArrayOutputStream os = new ByteArrayOutputStream();
 			final ImageData imageData = system.exportDiagram(os, 0, fileFormatOption);
@@ -223,6 +288,7 @@ public class PicoWebServer implements Runnable {
 		write(out, "Cache-Control: no-cache");
 		write(out, "Server: PlantUML PicoWebServer " + Version.versionString());
 		write(out, "Date: " + new Date());
+		write(out, "Access-Control-Allow-Origin: *");
 		write(out, "Content-type: " + fileFormatOption.getFileFormat().getMimeType());
 		write(out, "Content-length: " + fileData.length);
 		write(out, "X-PlantUML-Diagram-Width: " + imageData.getWidth());

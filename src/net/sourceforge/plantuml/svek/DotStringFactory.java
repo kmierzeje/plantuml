@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -37,44 +37,39 @@ package net.sourceforge.plantuml.svek;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.awt.geom.Point2D;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.sourceforge.plantuml.BaseFile;
-import net.sourceforge.plantuml.ISkinParam;
 import net.sourceforge.plantuml.StringUtils;
-import net.sourceforge.plantuml.UmlDiagramType;
-import net.sourceforge.plantuml.cucadiagram.CucaDiagram;
-import net.sourceforge.plantuml.cucadiagram.IGroup;
-import net.sourceforge.plantuml.cucadiagram.Rankdir;
-import net.sourceforge.plantuml.cucadiagram.dot.DotData;
-import net.sourceforge.plantuml.cucadiagram.dot.DotSplines;
-import net.sourceforge.plantuml.cucadiagram.dot.Graphviz;
-import net.sourceforge.plantuml.cucadiagram.dot.GraphvizUtils;
-import net.sourceforge.plantuml.cucadiagram.dot.GraphvizVersion;
-import net.sourceforge.plantuml.cucadiagram.dot.GraphvizVersions;
-import net.sourceforge.plantuml.cucadiagram.dot.ProcessState;
-import net.sourceforge.plantuml.cucadiagram.entity.EntityFactory;
-import net.sourceforge.plantuml.graphic.StringBounder;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.posimo.Moveable;
+import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.abel.EntityFactory;
+import net.sourceforge.plantuml.cucadiagram.ICucaDiagram;
+import net.sourceforge.plantuml.dot.DotData;
+import net.sourceforge.plantuml.dot.DotSplines;
+import net.sourceforge.plantuml.dot.Graphviz;
+import net.sourceforge.plantuml.dot.GraphvizUtils;
+import net.sourceforge.plantuml.dot.GraphvizVersion;
+import net.sourceforge.plantuml.dot.GraphvizVersions;
+import net.sourceforge.plantuml.dot.ProcessState;
+import net.sourceforge.plantuml.klimt.font.StringBounder;
+import net.sourceforge.plantuml.klimt.geom.Moveable;
+import net.sourceforge.plantuml.klimt.geom.Rankdir;
+import net.sourceforge.plantuml.klimt.geom.XPoint2D;
 import net.sourceforge.plantuml.security.SFile;
+import net.sourceforge.plantuml.skin.UmlDiagramType;
+import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.utils.Position;
 import net.sourceforge.plantuml.vizjs.GraphvizJs;
 import net.sourceforge.plantuml.vizjs.GraphvizJsRuntimeException;
 
 public class DotStringFactory implements Moveable {
 
 	private final Bibliotekon bibliotekon = new Bibliotekon();
-
-	final private Set<String> rankMin = new HashSet<>();
 
 	private final ColorSequence colorSequence;
 	private final Cluster root;
@@ -94,18 +89,19 @@ public class DotStringFactory implements Moveable {
 
 		this.colorSequence = new ColorSequence();
 		this.stringBounder = stringBounder;
-		this.root = new Cluster(colorSequence, skinParam, dotData.getRootGroup());
+		this.root = new Cluster(dotData.getEntityFactory().getDiagram(), colorSequence, skinParam,
+				dotData.getRootGroup());
 		this.current = root;
 	}
 
-	public DotStringFactory(StringBounder stringBounder, CucaDiagram diagram) {
+	public DotStringFactory(StringBounder stringBounder, ICucaDiagram diagram) {
 		this.skinParam = diagram.getSkinParam();
 		this.umlDiagramType = diagram.getUmlDiagramType();
 		this.dotMode = DotMode.NORMAL;
 
 		this.colorSequence = new ColorSequence();
 		this.stringBounder = stringBounder;
-		this.root = new Cluster(colorSequence, skinParam, diagram.getEntityFactory().getRootGroup());
+		this.root = new Cluster(diagram, colorSequence, skinParam, diagram.getEntityFactory().getRootGroup());
 		this.current = root;
 	}
 
@@ -113,26 +109,13 @@ public class DotStringFactory implements Moveable {
 		current.addNode(node);
 	}
 
-	private void printMinRanking(StringBuilder sb) {
-		if (rankMin.size() == 0) {
-			return;
-		}
-		sb.append("{ rank = min;");
-		for (String id : rankMin) {
-			sb.append(id);
-			sb.append(";");
-		}
-		sb.append("}");
-
-	}
-
 	private double getHorizontalDzeta() {
 		double max = 0;
 		for (SvekLine l : bibliotekon.allLines()) {
 			final double c = l.getHorizontalDzeta(stringBounder);
-			if (c > max) {
+			if (c > max)
 				max = c;
-			}
+
 		}
 		return max / 10;
 	}
@@ -141,45 +124,48 @@ public class DotStringFactory implements Moveable {
 		double max = 0;
 		for (SvekLine l : bibliotekon.allLines()) {
 			final double c = l.getVerticalDzeta(stringBounder);
-			if (c > max) {
+			if (c > max)
 				max = c;
-			}
+
 		}
+		if (root.diagram.getPragma().useKermor())
+			return max / 100;
 		return max / 10;
 	}
 
+	// ::comment when __CORE__
 	String createDotString(String... dotStrings) {
 		final StringBuilder sb = new StringBuilder();
 
 		double nodesep = getHorizontalDzeta();
-		if (nodesep < getMinNodeSep()) {
+		if (nodesep < getMinNodeSep())
 			nodesep = getMinNodeSep();
-		}
-		if (skinParam.getNodesep() != 0) {
+
+		if (skinParam.getNodesep() != 0)
 			nodesep = skinParam.getNodesep();
-		}
+
 		final String nodesepInches = SvekUtils.pixelToInches(nodesep);
 		// Log.println("nodesep=" + nodesepInches);
 		double ranksep = getVerticalDzeta();
-		if (ranksep < getMinRankSep()) {
+		if (ranksep < getMinRankSep())
 			ranksep = getMinRankSep();
-		}
-		if (skinParam.getRanksep() != 0) {
+
+		if (skinParam.getRanksep() != 0)
 			ranksep = skinParam.getRanksep();
-		}
+
 		final String ranksepInches = SvekUtils.pixelToInches(ranksep);
 		// Log.println("ranksep=" + ranksepInches);
 		sb.append("digraph unix {");
 		SvekUtils.println(sb);
 
 		for (String s : dotStrings) {
-			if (s.startsWith("ranksep")) {
+			if (s.startsWith("ranksep"))
 				sb.append("ranksep=" + ranksepInches + ";");
-			} else if (s.startsWith("nodesep")) {
+			else if (s.startsWith("nodesep"))
 				sb.append("nodesep=" + nodesepInches + ";");
-			} else {
+			else
 				sb.append(s);
-			}
+
 			SvekUtils.println(sb);
 		}
 		// sb.append("newrank=true;");
@@ -210,35 +196,48 @@ public class DotStringFactory implements Moveable {
 
 		manageMinMaxCluster(sb);
 
-		root.printCluster1(sb, bibliotekon.allLines(), stringBounder);
-		for (SvekLine line : bibliotekon.lines0()) {
-			line.appendLine(getGraphvizVersion(), sb, dotMode, dotSplines);
-		}
-		root.fillRankMin(rankMin);
-		root.printCluster2(sb, bibliotekon.allLines(), stringBounder, dotMode, getGraphvizVersion(), umlDiagramType);
-		printMinRanking(sb);
+		if (root.diagram.getPragma().useKermor()) {
+			for (SvekLine line : bibliotekon.lines0())
+				line.appendLine(getGraphvizVersion(), sb, dotMode, dotSplines);
+			for (SvekLine line : bibliotekon.lines1())
+				line.appendLine(getGraphvizVersion(), sb, dotMode, dotSplines);
 
-		for (SvekLine line : bibliotekon.lines1()) {
-			line.appendLine(getGraphvizVersion(), sb, dotMode, dotSplines);
+			root.printCluster3_forKermor(sb, bibliotekon.allLines(), stringBounder, dotMode, getGraphvizVersion(),
+					umlDiagramType);
+
+		} else {
+			root.printCluster1(sb, bibliotekon.allLines(), stringBounder);
+
+			for (SvekLine line : bibliotekon.lines0())
+				line.appendLine(getGraphvizVersion(), sb, dotMode, dotSplines);
+
+			root.printCluster2(sb, bibliotekon.allLines(), stringBounder, dotMode, getGraphvizVersion(),
+					umlDiagramType);
+
+			for (SvekLine line : bibliotekon.lines1())
+				line.appendLine(getGraphvizVersion(), sb, dotMode, dotSplines);
+
 		}
+
 		SvekUtils.println(sb);
 		sb.append("}");
 
 		return sb.toString();
 	}
+	// ::done
 
 	private void manageMinMaxCluster(final StringBuilder sb) {
 		final List<String> minPointCluster = new ArrayList<>();
 		final List<String> maxPointCluster = new ArrayList<>();
 		for (Cluster cluster : bibliotekon.allCluster()) {
 			final String minPoint = cluster.getMinPoint(umlDiagramType);
-			if (minPoint != null) {
+			if (minPoint != null)
 				minPointCluster.add(minPoint);
-			}
+
 			final String maxPoint = cluster.getMaxPoint(umlDiagramType);
-			if (maxPoint != null) {
+			if (maxPoint != null)
 				maxPointCluster.add(maxPoint);
-			}
+
 		}
 		if (minPointCluster.size() > 0) {
 			sb.append("{rank=min;");
@@ -267,6 +266,8 @@ public class DotStringFactory implements Moveable {
 			// return 29;
 			return 40;
 		}
+		if (root.diagram.getPragma().useKermor())
+			return 40;
 		return 60;
 	}
 
@@ -278,20 +279,26 @@ public class DotStringFactory implements Moveable {
 		return 35;
 	}
 
+	// ::uncomment when __CORE__
+	// public GraphvizVersion getGraphvizVersion() {
+	// return null;
+	// }
+	// ::done
+	// ::comment when __CORE__
 	private GraphvizVersion graphvizVersion;
 
 	public GraphvizVersion getGraphvizVersion() {
-		if (graphvizVersion == null) {
+		if (graphvizVersion == null)
 			graphvizVersion = getGraphvizVersionInternal();
-		}
+
 		return graphvizVersion;
 	}
 
 	private GraphvizVersion getGraphvizVersionInternal() {
 		final Graphviz graphviz = GraphvizUtils.create(skinParam, "foo;", "svg");
-		if (graphviz instanceof GraphvizJs) {
+		if (graphviz instanceof GraphvizJs)
 			return GraphvizJs.getGraphvizVersion(false);
-		}
+
 		final File f = graphviz.getDotExe();
 		return GraphvizVersions.getInstance().getVersion(f);
 	}
@@ -309,9 +316,9 @@ public class DotStringFactory implements Moveable {
 		try {
 			final ProcessState state = graphviz.createFile3(baos);
 			baos.close();
-			if (state.differs(ProcessState.TERMINATED_OK())) {
+			if (state.differs(ProcessState.TERMINATED_OK()))
 				throw new IllegalStateException("Timeout4 " + state, state.getCause());
-			}
+
 		} catch (GraphvizJsRuntimeException e) {
 			System.err.println("GraphvizJsRuntimeException");
 			graphvizVersion = GraphvizJs.getGraphvizVersion(true);
@@ -320,9 +327,9 @@ public class DotStringFactory implements Moveable {
 			baos = new ByteArrayOutputStream();
 			final ProcessState state = graphviz.createFile3(baos);
 			baos.close();
-			if (state.differs(ProcessState.TERMINATED_OK())) {
+			if (state.differs(ProcessState.TERMINATED_OK()))
 				throw new IllegalStateException("Timeout4 " + state, state.getCause());
-			}
+
 		}
 		final byte[] result = baos.toByteArray();
 		final String s = new String(result, UTF_8);
@@ -337,9 +344,9 @@ public class DotStringFactory implements Moveable {
 
 	public boolean illegalDotExe() {
 		final Graphviz graphviz = GraphvizUtils.create(skinParam, "svg");
-		if (graphviz instanceof GraphvizJs) {
+		if (graphviz instanceof GraphvizJs)
 			return false;
-		}
+
 		final File dotExe = graphviz.getDotExe();
 		return dotExe == null || dotExe.isFile() == false || dotExe.canRead() == false;
 	}
@@ -349,21 +356,16 @@ public class DotStringFactory implements Moveable {
 		return graphviz.getDotExe();
 	}
 
-	public void solve(boolean mergeIntricated, EntityFactory entityFactory, final String svg)
-			throws IOException, InterruptedException {
-		if (svg.length() == 0) {
+	public void solve(EntityFactory entityFactory, final String svg) throws IOException, InterruptedException {
+		if (svg.length() == 0)
 			throw new EmptySvgException();
-		}
 
 		final Pattern pGraph = Pattern.compile("(?m)\\<svg\\s+width=\"(\\d+)pt\"\\s+height=\"(\\d+)pt\"");
 		final Matcher mGraph = pGraph.matcher(svg);
-		if (mGraph.find() == false) {
+		if (mGraph.find() == false)
 			throw new IllegalStateException();
-		}
-//		final int fullWidth = Integer.parseInt(mGraph.group(1));
-		final int fullHeight = Integer.parseInt(mGraph.group(2));
 
-//		final MinFinder corner1 = new MinFinder();
+		final int fullHeight = Integer.parseInt(mGraph.group(2));
 
 		final Point2DFunction move = new YDelta(fullHeight);
 		final SvgResult svgResult = new SvgResult(svg, move);
@@ -371,17 +373,14 @@ public class DotStringFactory implements Moveable {
 			int idx = svg.indexOf("<title>" + node.getUid() + "</title>");
 			if (node.getType() == ShapeType.RECTANGLE || node.getType() == ShapeType.RECTANGLE_HTML_FOR_PORTS
 					|| node.getType() == ShapeType.RECTANGLE_WITH_CIRCLE_INSIDE || node.getType() == ShapeType.FOLDER
-					|| node.getType() == ShapeType.DIAMOND) {
-				final List<Point2D.Double> points = svgResult.substring(idx).extractList(SvgResult.POINTS_EQUALS);
-				final double minY = SvekUtils.getMinY(points);
-				final double overscanX = node.getOverscanX(stringBounder);
-				final double minX = SvekUtils.getMinX(points);
-//				corner1.manage(minX - overscanX, minY);
-				node.moveSvek(minX, minY);
+					|| node.getType() == ShapeType.DIAMOND || node.getType() == ShapeType.RECTANGLE_PORT) {
+				final List<XPoint2D> points = svgResult.substring(idx).extractList(SvgResult.POINTS_EQUALS);
+				final XPoint2D min = SvekUtils.getMinXY(points);
+				node.moveSvek(min.getX(), min.getY());
 			} else if (node.getType() == ShapeType.ROUND_RECTANGLE) {
 				final int idx2 = svg.indexOf("d=\"", idx + 1);
 				idx = svg.indexOf("points=\"", idx + 1);
-				final List<Point2D.Double> points;
+				final List<XPoint2D> points;
 				if (idx2 != -1 && (idx == -1 || idx2 < idx)) {
 					// GraphViz 2.30
 					points = svgResult.substring(idx2).extractList(SvgResult.D_EQUALS);
@@ -392,21 +391,17 @@ public class DotStringFactory implements Moveable {
 						points.addAll(svgResult.substring(idx).extractList(SvgResult.POINTS_EQUALS));
 					}
 				}
-				final double minX = SvekUtils.getMinX(points);
-				final double minY = SvekUtils.getMinY(points);
-//				corner1.manage(minX, minY);
-				node.moveSvek(minX, minY);
+				final XPoint2D min = SvekUtils.getMinXY(points);
+				node.moveSvek(min.getX(), min.getY());
 			} else if (node.getType() == ShapeType.OCTAGON || node.getType() == ShapeType.HEXAGON) {
 				idx = svg.indexOf("points=\"", idx + 1);
 				final int starting = idx;
-				final List<Point2D.Double> points = svgResult.substring(starting).extractList(SvgResult.POINTS_EQUALS);
-				final double minX = SvekUtils.getMinX(points);
-				final double minY = SvekUtils.getMinY(points);
+				final List<XPoint2D> points = svgResult.substring(starting).extractList(SvgResult.POINTS_EQUALS);
+				final XPoint2D min = SvekUtils.getMinXY(points);
 				// corner1.manage(minX, minY);
-				node.moveSvek(minX, minY);
-				node.setPolygon(minX, minY, points);
-			} else if (node.getType() == ShapeType.CIRCLE || node.getType() == ShapeType.CIRCLE_IN_RECT
-					|| node.getType() == ShapeType.OVAL) {
+				node.moveSvek(min.getX(), min.getY());
+				node.setPolygon(min.getX(), min.getY(), points);
+			} else if (node.getType() == ShapeType.CIRCLE || node.getType() == ShapeType.OVAL) {
 				final double cx = SvekUtils.getValue(svg, idx, "cx");
 				final double cy = SvekUtils.getValue(svg, idx, "cy") + fullHeight;
 				final double rx = SvekUtils.getValue(svg, idx, "rx");
@@ -418,91 +413,79 @@ public class DotStringFactory implements Moveable {
 		}
 
 		for (Cluster cluster : bibliotekon.allCluster()) {
-			if (mergeIntricated) {
-				final IGroup group = cluster.getGroups().iterator().next();
-				if (entityFactory.isIntricated(group) != null) {
-					continue;
-				}
-			}
 			int idx = getClusterIndex(svg, cluster.getColor());
 			final int starting = idx;
-			final List<Point2D.Double> points = svgResult.substring(starting).extractList(SvgResult.POINTS_EQUALS);
-			final double minX = SvekUtils.getMinX(points);
-			final double minY = SvekUtils.getMinY(points);
-			final double maxX = SvekUtils.getMaxX(points);
-			final double maxY = SvekUtils.getMaxY(points);
-			cluster.setPosition(minX, minY, maxX, maxY);
-			// corner1.manage(minX, minY);
+			final List<XPoint2D> points = svgResult.substring(starting).extractList(SvgResult.POINTS_EQUALS);
+			final XPoint2D min = SvekUtils.getMinXY(points);
+			final XPoint2D max = SvekUtils.getMaxXY(points);
+			cluster.setPosition(min, max);
 
-			if (cluster.getTitleAndAttributeWidth() == 0 || cluster.getTitleAndAttributeHeight() == 0) {
+			if (cluster.getTitleAndAttributeWidth() == 0 || cluster.getTitleAndAttributeHeight() == 0)
 				continue;
-			}
+
 			idx = getClusterIndex(svg, cluster.getTitleColor());
-			final int starting1 = idx;
-			final List<Point2D.Double> pointsTitle = svgResult.substring(starting1)
-					.extractList(SvgResult.POINTS_EQUALS);
-			final double minXtitle = SvekUtils.getMinX(pointsTitle);
-			final double minYtitle = SvekUtils.getMinY(pointsTitle);
-			cluster.setTitlePosition(minXtitle, minYtitle);
+			final List<XPoint2D> pointsTitle = svgResult.substring(idx).extractList(SvgResult.POINTS_EQUALS);
+			cluster.setTitlePosition(SvekUtils.getMinXY(pointsTitle));
+
+			if (root.diagram.getPragma().useKermor()) {
+				if (cluster.getGroup().getNotes(Position.TOP).size() > 0) {
+					final List<XPoint2D> noteUp = svgResult.substring(getClusterIndex(svg, cluster.getColorNoteTop()))
+							.extractList(SvgResult.POINTS_EQUALS);
+					cluster.setNoteTopPosition(SvekUtils.getMinXY(noteUp));
+				}
+				if (cluster.getGroup().getNotes(Position.BOTTOM).size() > 0) {
+					final List<XPoint2D> noteBottom = svgResult
+							.substring(getClusterIndex(svg, cluster.getColorNoteBottom()))
+							.extractList(SvgResult.POINTS_EQUALS);
+					cluster.setNoteBottomPosition(SvekUtils.getMinXY(noteBottom));
+				}
+			}
 		}
 
-		for (SvekLine line : bibliotekon.allLines()) {
+		for (SvekLine line : bibliotekon.allLines())
 			line.solveLine(svgResult);
-		}
 
-		for (SvekLine line : bibliotekon.allLines()) {
+		for (SvekLine line : bibliotekon.allLines())
 			line.manageCollision(bibliotekon.allNodes());
-		}
-		// corner1.manage(0, 0);
-//		return new ClusterPosition(corner1.getMinX(), corner1.getMinY(), fullWidth, fullHeight);
-//		// return new ClusterPosition(0, 0, fullWidth, fullHeight);
+
 	}
 
 	private int getClusterIndex(final String svg, int colorInt) {
-		final String colorString = StringUtils.goLowerCase(DotStringFactory.sharp000000(colorInt));
+		final String colorString = StringUtils.goLowerCase(StringUtils.sharp000000(colorInt));
 		final String keyTitle1 = "=\"" + colorString + "\"";
 		int idx = svg.indexOf(keyTitle1);
 		if (idx == -1) {
 			final String keyTitle2 = "stroke:" + colorString + ";";
 			idx = svg.indexOf(keyTitle2);
 		}
-		if (idx == -1) {
+		if (idx == -1)
 			throw new IllegalStateException("Cannot find color " + colorString);
-		}
+
 		return idx;
 	}
+	// ::done
 
-	public static String sharp000000(int color) {
-		final int v = 0xFFFFFF & color;
-		String s = "000000" + Integer.toHexString(v).toUpperCase();
-		s = s.substring(s.length() - 6);
-		return "#" + s;
-	}
-
-	public void openCluster(int titleAndAttributeWidth, int titleAndAttributeHeight, TextBlock title, TextBlock stereo,
-			IGroup g) {
-		this.current = current.createChild(titleAndAttributeWidth, titleAndAttributeHeight, title, stereo,
-				colorSequence, skinParam, g);
+	public void openCluster(Entity g, ClusterHeader clusterHeader) {
+		this.current = current.createChild(clusterHeader, colorSequence, skinParam, g);
 		bibliotekon.addCluster(this.current);
 	}
 
 	public void closeCluster() {
-		if (current.getParentCluster() == null) {
+		if (current.getParentCluster() == null)
 			throw new IllegalStateException();
-		}
+
 		this.current = current.getParentCluster();
 	}
 
 	public void moveSvek(double deltaX, double deltaY) {
-		for (SvekNode sh : bibliotekon.allNodes()) {
+		for (SvekNode sh : bibliotekon.allNodes())
 			sh.moveSvek(deltaX, deltaY);
-		}
-		for (SvekLine line : bibliotekon.allLines()) {
+
+		for (SvekLine line : bibliotekon.allLines())
 			line.moveSvek(deltaX, deltaY);
-		}
-		for (Cluster cl : bibliotekon.allCluster()) {
+
+		for (Cluster cl : bibliotekon.allCluster())
 			cl.moveSvek(deltaX, deltaY);
-		}
 
 	}
 

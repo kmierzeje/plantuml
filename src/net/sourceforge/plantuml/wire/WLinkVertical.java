@@ -2,14 +2,14 @@
  * PlantUML : a free UML diagram generator
  * ========================================================================
  *
- * (C) Copyright 2009-2020, Arnaud Roques
+ * (C) Copyright 2009-2024, Arnaud Roques
  *
- * Project Info:  http://plantuml.com
+ * Project Info:  https://plantuml.com
  * 
  * If you like this project or if you find it useful, you can support us at:
  * 
- * http://plantuml.com/patreon (only 1$ per month!)
- * http://plantuml.com/paypal
+ * https://plantuml.com/patreon (only 1$ per month!)
+ * https://plantuml.com/paypal
  * 
  * This file is part of PlantUML.
  *
@@ -35,18 +35,18 @@
  */
 package net.sourceforge.plantuml.wire;
 
-import net.sourceforge.plantuml.ISkinParam;
-import net.sourceforge.plantuml.cucadiagram.Display;
-import net.sourceforge.plantuml.graphic.FontConfiguration;
-import net.sourceforge.plantuml.graphic.HorizontalAlignment;
-import net.sourceforge.plantuml.graphic.TextBlock;
-import net.sourceforge.plantuml.ugraphic.UFont;
-import net.sourceforge.plantuml.ugraphic.UGraphic;
-import net.sourceforge.plantuml.ugraphic.ULine;
-import net.sourceforge.plantuml.ugraphic.UPath;
-import net.sourceforge.plantuml.ugraphic.UTranslate;
-import net.sourceforge.plantuml.ugraphic.color.HColor;
-import net.sourceforge.plantuml.ugraphic.color.HColorUtils;
+import net.sourceforge.plantuml.klimt.UPath;
+import net.sourceforge.plantuml.klimt.UTranslate;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.color.HColors;
+import net.sourceforge.plantuml.klimt.creole.Display;
+import net.sourceforge.plantuml.klimt.drawing.UGraphic;
+import net.sourceforge.plantuml.klimt.font.FontConfiguration;
+import net.sourceforge.plantuml.klimt.font.UFont;
+import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
+import net.sourceforge.plantuml.klimt.shape.TextBlock;
+import net.sourceforge.plantuml.klimt.shape.ULine;
+import net.sourceforge.plantuml.style.ISkinParam;
 
 public class WLinkVertical {
 
@@ -66,7 +66,15 @@ public class WLinkVertical {
 		this.direction = direction;
 		this.type = type;
 		this.label = label;
-		this.color = color == null ? HColorUtils.BLACK : color;
+		this.color = color == null ? getBlack() : color;
+	}
+
+	private HColor getBlack() {
+		return HColors.BLACK.withDark(HColors.WHITE);
+	}
+
+	private HColor getWhite() {
+		return HColors.WHITE.withDark(HColors.BLACK);
 	}
 
 	private TextBlock getTextBlock() {
@@ -81,14 +89,14 @@ public class WLinkVertical {
 			ug = ug.apply(color.bg());
 			drawNormalArrow(ug);
 		} else if (type == WLinkType.BUS) {
-			ug = ug.apply(HColorUtils.WHITE.bg());
+			ug = ug.apply(getWhite().bg());
 			drawBusArrow(ug);
 		}
 	}
 
 	private void drawBusArrow(UGraphic ug) {
 		final double dy = destination - start.getDy() - 2;
-		final UPath path = new UPath();
+		final UPath path = UPath.none();
 		if (direction == WArrowDirection.NONE) {
 			path.moveTo(0, 0);
 			path.lineTo(0, dy);
@@ -136,12 +144,13 @@ public class WLinkVertical {
 			path.lineTo(5, 0);
 			path.closePath();
 			ug.apply(start.compose(UTranslate.dy(1))).draw(path);
-		}	}
+		}
+	}
 
 	private void drawNormalArrow(UGraphic ug) {
 		final double dy = destination - start.getDy() - 2;
 		if (direction == WArrowDirection.BOTH || direction == WArrowDirection.NORMAL) {
-			final UPath path = new UPath();
+			final UPath path = UPath.none();
 			path.moveTo(0, 0);
 			path.lineTo(5, -5);
 			path.lineTo(-5, -5);
@@ -150,7 +159,7 @@ public class WLinkVertical {
 			ug.apply(start.compose(UTranslate.dy(dy))).draw(path);
 		}
 		if (direction == WArrowDirection.BOTH || direction == WArrowDirection.REVERSE) {
-			final UPath path = new UPath();
+			final UPath path = UPath.none();
 			path.moveTo(0, 0);
 			path.lineTo(5, 5);
 			path.lineTo(-5, 5);
