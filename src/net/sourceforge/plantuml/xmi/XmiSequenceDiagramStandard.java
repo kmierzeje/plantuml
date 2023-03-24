@@ -20,6 +20,7 @@ import net.sourceforge.plantuml.sequencediagram.MessageExo;
 import net.sourceforge.plantuml.sequencediagram.Note;
 import net.sourceforge.plantuml.sequencediagram.NotePosition;
 import net.sourceforge.plantuml.sequencediagram.Participant;
+import net.sourceforge.plantuml.sequencediagram.Reference;
 import net.sourceforge.plantuml.sequencediagram.SequenceDiagram;
 
 public class XmiSequenceDiagramStandard extends XmiSequenceDiagram {
@@ -43,8 +44,8 @@ public class XmiSequenceDiagramStandard extends XmiSequenceDiagram {
 						new String[][] { { "xmlns:uml", "http://www.omg.org/spec/UML/20110701" },
 								{ "xmlns:xmi", "http://schema.omg.org/spec/XMI/2.1" }, { "xmi:version", "2.1" },
 								{ "xmi:id", getXmiId("uml:Model", diagram) } }))
-				.appendChild(createUmlElement(diagram, "packagedElement", "Interaction"));
-		packagedElement.appendChild(createUmlElement(diagram, "nestedClassifier", "Collaboration"));
+				.appendChild(buildInteraction());
+
 
 		for (Participant participant : diagram.participants()) {
 			packagedElement.appendChild(createElement(participant, "lifeline",
@@ -61,8 +62,28 @@ public class XmiSequenceDiagramStandard extends XmiSequenceDiagram {
 				buildMessage(packagedElement, currentFragment, (AbstractMessage) event);
 			} else if (event instanceof Grouping) {
 				currentFragment = buildGrouping(currentFragment, (Grouping) event);
+			} else if (event instanceof Reference) {
+				buildReference(packagedElement, (Reference)event);
 			}
 		}
+	}
+
+	private Element buildInteraction() {
+		Element interaction = createUmlElement(diagram, "packagedElement", "Interaction");
+		if (diagram.getMainFrame()!=null) {
+			interaction.setAttribute("xmi:id", getDisplayString(diagram.getMainFrame()));
+		}
+		interaction.appendChild(createUmlElement(diagram, "nestedClassifier", "Collaboration"));
+		return interaction;
+	}
+
+	private void buildReference(Node packagedElement, Reference event) {
+		Element interactionUse = createUmlElement(event, "fragment", "InteractionUse");
+		interactionUse.setAttribute("refersTo", getDisplayString(event.getStrings()));
+		interactionUse.setAttribute("covered", String.join(" ",
+				event.getParticipant().stream().map(
+						p -> getDisplayString(p.getDisplay(false))).toArray(String[]::new)));
+		packagedElement.appendChild(interactionUse);
 	}
 
 	private void buildLifeEvent(Node packagedElement, LifeEvent event) {
