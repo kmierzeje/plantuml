@@ -210,11 +210,16 @@ public class SecurityUtils {
 	}
 
 	public static String getenv(String name) {
-		final String env = System.getProperty(name);
-		if (StringUtils.isNotEmpty(env))
-			return env;
+		String result = System.getProperty(name);
+		if (StringUtils.isNotEmpty(result))
+			return result;
 
-		return System.getenv(name);
+		result = System.getenv(name);
+		if (StringUtils.isNotEmpty(result))
+			return result;
+
+		final String alternateName = name.replace(".", "_").toUpperCase();
+		return System.getenv(alternateName);
 	}
 
 	/**

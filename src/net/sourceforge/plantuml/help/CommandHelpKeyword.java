@@ -33,57 +33,39 @@
  * 
  *
  */
-package net.sourceforge.plantuml.svek;
+package net.sourceforge.plantuml.help;
 
-import java.util.Objects;
+import net.sourceforge.plantuml.command.CommandExecutionResult;
+import net.sourceforge.plantuml.command.SingleLineCommand2;
+import net.sourceforge.plantuml.regex.IRegex;
+import net.sourceforge.plantuml.regex.RegexConcat;
+import net.sourceforge.plantuml.regex.RegexLeaf;
+import net.sourceforge.plantuml.regex.RegexResult;
+import net.sourceforge.plantuml.syntax.LanguageDescriptor;
+import net.sourceforge.plantuml.utils.LineLocation;
 
-import net.sourceforge.plantuml.abel.Entity;
-import net.sourceforge.plantuml.klimt.color.HColor;
-import net.sourceforge.plantuml.klimt.font.StringBounder;
-import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
-import net.sourceforge.plantuml.stereo.Stereotype;
-import net.sourceforge.plantuml.style.ISkinParam;
+public class CommandHelpKeyword extends SingleLineCommand2<Help> {
 
-public abstract class AbstractEntityImage extends AbstractTextBlock implements IEntityImage {
+	public CommandHelpKeyword() {
+		super(getRegexConcat());
+	}
 
-	private final Entity entity;
-	private final ISkinParam skinParam;
-
-	public AbstractEntityImage(Entity entity, ISkinParam skinParam) {
-		this.entity = Objects.requireNonNull(entity);
-		this.skinParam = Objects.requireNonNull(skinParam);
+	static IRegex getRegexConcat() {
+		return RegexConcat.build(CommandHelpKeyword.class.getName(), RegexLeaf.start(), //
+				new RegexLeaf("help"), //
+				RegexLeaf.spaceOneOrMore(), //
+				new RegexLeaf("keywords?"), RegexLeaf.end());
 	}
 
 	@Override
-	public boolean isHidden() {
-		return entity.isHidden();
-	}
+	protected CommandExecutionResult executeArg(Help diagram, LineLocation location, RegexResult arg) {
+		diagram.add("<b>Help on keywords");
+		diagram.add(" ");
+		diagram.add(" The possible keywords are :");
+		for (String type : new LanguageDescriptor().getKeyword()) {
+			diagram.add("* " + type);
+		}
 
-	protected final Entity getEntity() {
-		return entity;
+		return CommandExecutionResult.ok();
 	}
-
-	protected final ISkinParam getSkinParam() {
-		return skinParam;
-	}
-
-	@Override
-	public final HColor getBackcolor() {
-		return skinParam.getBackgroundColor();
-	}
-
-	protected final Stereotype getStereo() {
-		return entity.getStereotype();
-	}
-
-	@Override
-	public Margins getShield(StringBounder stringBounder) {
-		return Margins.NONE;
-	}
-
-	@Override
-	public double getOverscanX(StringBounder stringBounder) {
-		return 0;
-	}
-
 }

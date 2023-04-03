@@ -88,17 +88,17 @@ public class Display implements Iterable<CharSequence> {
 
 	public final static Display NULL = new Display(true, null, null, true, CreoleMode.FULL);
 
-//	@Override
-//	public int hashCode() {
-//		if (isNull)
-//			return 42;
-//		return displayData.hashCode();
-//	}
-//
-//	@Override
-//	public boolean equals(Object other) {
-//		return this.displayData.equals(((Display) other).displayData);
-//	}
+	@Override
+	public int hashCode() {
+		if (isNull)
+			return 42;
+		return displayData.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return this.displayData.equals(((Display) other).displayData);
+	}
 
 	public boolean equalsLike(Display other) {
 		if (isNull(this))
@@ -413,6 +413,12 @@ public class Display implements Iterable<CharSequence> {
 	public Display addFirst(CharSequence s) {
 		final Display result = new Display(this.showStereotype, this, this.defaultCreoleMode);
 		result.displayData.add(0, s);
+		return result;
+	}
+
+	public Display appendFirstLine(String appended) {
+		final Display result = new Display(this.showStereotype, this, this.defaultCreoleMode);
+		result.displayData.set(0, appended + result.displayData.get(0));
 		return result;
 	}
 

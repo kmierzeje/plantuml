@@ -33,57 +33,31 @@
  * 
  *
  */
-package net.sourceforge.plantuml.svek;
+package net.sourceforge.plantuml.help;
 
-import java.util.Objects;
+import java.util.List;
+import java.util.Map;
 
-import net.sourceforge.plantuml.abel.Entity;
-import net.sourceforge.plantuml.klimt.color.HColor;
-import net.sourceforge.plantuml.klimt.font.StringBounder;
-import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
-import net.sourceforge.plantuml.stereo.Stereotype;
-import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.command.Command;
+import net.sourceforge.plantuml.command.PSystemCommandFactory;
+import net.sourceforge.plantuml.core.UmlSource;
 
-public abstract class AbstractEntityImage extends AbstractTextBlock implements IEntityImage {
+public class HelpFactory extends PSystemCommandFactory {
+	// ::comment when __CORE__
+	// ::comment when __HAXE__
 
-	private final Entity entity;
-	private final ISkinParam skinParam;
-
-	public AbstractEntityImage(Entity entity, ISkinParam skinParam) {
-		this.entity = Objects.requireNonNull(entity);
-		this.skinParam = Objects.requireNonNull(skinParam);
+	@Override
+	public Help createEmptyDiagram(UmlSource source, Map<String, String> skinParam) {
+		return new Help(source);
 	}
 
 	@Override
-	public boolean isHidden() {
-		return entity.isHidden();
-	}
-
-	protected final Entity getEntity() {
-		return entity;
-	}
-
-	protected final ISkinParam getSkinParam() {
-		return skinParam;
-	}
-
-	@Override
-	public final HColor getBackcolor() {
-		return skinParam.getBackgroundColor();
-	}
-
-	protected final Stereotype getStereo() {
-		return entity.getStereotype();
-	}
-
-	@Override
-	public Margins getShield(StringBounder stringBounder) {
-		return Margins.NONE;
-	}
-
-	@Override
-	public double getOverscanX(StringBounder stringBounder) {
-		return 0;
+	protected void initCommandsList(List<Command> cmds) {
+		cmds.add(new CommandHelpColor());
+		cmds.add(new CommandHelpFont());
+		cmds.add(new CommandHelpKeyword());
+		cmds.add(new CommandHelpType());
+		cmds.add(new CommandHelpTheme());
 	}
 
 }

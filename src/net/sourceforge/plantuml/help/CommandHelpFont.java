@@ -33,57 +33,41 @@
  * 
  *
  */
-package net.sourceforge.plantuml.svek;
+package net.sourceforge.plantuml.help;
 
-import java.util.Objects;
+import java.awt.GraphicsEnvironment;
 
-import net.sourceforge.plantuml.abel.Entity;
-import net.sourceforge.plantuml.klimt.color.HColor;
-import net.sourceforge.plantuml.klimt.font.StringBounder;
-import net.sourceforge.plantuml.klimt.shape.AbstractTextBlock;
-import net.sourceforge.plantuml.stereo.Stereotype;
-import net.sourceforge.plantuml.style.ISkinParam;
+import net.sourceforge.plantuml.command.CommandExecutionResult;
+import net.sourceforge.plantuml.command.SingleLineCommand2;
+import net.sourceforge.plantuml.regex.IRegex;
+import net.sourceforge.plantuml.regex.RegexConcat;
+import net.sourceforge.plantuml.regex.RegexLeaf;
+import net.sourceforge.plantuml.regex.RegexResult;
+import net.sourceforge.plantuml.utils.LineLocation;
 
-public abstract class AbstractEntityImage extends AbstractTextBlock implements IEntityImage {
+public class CommandHelpFont extends SingleLineCommand2<Help> {
 
-	private final Entity entity;
-	private final ISkinParam skinParam;
+	public CommandHelpFont() {
+		super(getRegexConcat());
+	}
 
-	public AbstractEntityImage(Entity entity, ISkinParam skinParam) {
-		this.entity = Objects.requireNonNull(entity);
-		this.skinParam = Objects.requireNonNull(skinParam);
+	static IRegex getRegexConcat() {
+		return RegexConcat.build(CommandHelpFont.class.getName(), RegexLeaf.start(), //
+				new RegexLeaf("help"), //
+				RegexLeaf.spaceOneOrMore(), //
+				new RegexLeaf("fonts?"), RegexLeaf.end());
 	}
 
 	@Override
-	public boolean isHidden() {
-		return entity.isHidden();
-	}
+	protected CommandExecutionResult executeArg(Help diagram, LineLocation location, RegexResult arg) {
+		diagram.add("<b>Help on font");
+		diagram.add(" ");
+		diagram.add(" The possible font on your system are :");
+		final String name[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+		for (String n : name) {
+			diagram.add("* " + n);
+		}
 
-	protected final Entity getEntity() {
-		return entity;
+		return CommandExecutionResult.ok();
 	}
-
-	protected final ISkinParam getSkinParam() {
-		return skinParam;
-	}
-
-	@Override
-	public final HColor getBackcolor() {
-		return skinParam.getBackgroundColor();
-	}
-
-	protected final Stereotype getStereo() {
-		return entity.getStereotype();
-	}
-
-	@Override
-	public Margins getShield(StringBounder stringBounder) {
-		return Margins.NONE;
-	}
-
-	@Override
-	public double getOverscanX(StringBounder stringBounder) {
-		return 0;
-	}
-
 }
